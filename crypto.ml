@@ -5,8 +5,8 @@ module BlockChain = struct
   type block = {
       prev_hash:hash;
       time_stamp:Unix.tm;
-      soucre:int; (*Public Key*)
-      dest:int;
+      soucre:string; (*Public Key*)
+      dest:string;
       signature:string;
       nonce:int;
       amount:float;
