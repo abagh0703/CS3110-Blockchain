@@ -1,0 +1,4 @@
+module BlockChain = struct 
+
+type block = {
+    
