@@ -1,0 +1,19 @@
+{
+  chain:
+  [{
+      prev_hash: 0,
+      time_stamp:1524874389,
+      source: "soph",
+      dest: "personA",
+      signature: "do not know",
+      nonce: 123
+      amount: 3.50,
+      complexity: 15,
+      genesis: false,
+      miner: "personB",
+      n:"what is n",
+      d:"what is d"
+  }],
+  reward: 250,
+  bits: 64
+}
