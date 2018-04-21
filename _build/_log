@@ -1,0 +1,10 @@
+### Starting build.
+# Target: BlockchainServer.ml.depends, tags: { package(cohttp.async), package(core), ppx(ppx-jane -as-ppx), bin_annot, debug, extension:ml, file:BlockchainServer.ml, ocaml, ocamldep, quiet, short_paths, thread }
+ocamlfind ocamldep -package cohttp.async -package core -ppx 'ppx-jane -as-ppx' -modules BlockchainServer.ml > BlockchainServer.ml.depends
+# Target: BlockchainServer.cmo, tags: { package(cohttp.async), package(core), ppx(ppx-jane -as-ppx), bin_annot, byte, compile, debug, extension:cmo, extension:ml, file:BlockchainServer.cmo, file:BlockchainServer.ml, implem, ocaml, quiet, short_paths, thread }
+ocamlfind ocamlc -c -w A-4-33-40-41-42-43-34-44 -strict-sequence -g -bin-annot -short-paths -thread -package cohttp.async -package core -ppx 'ppx-jane -as-ppx' -o BlockchainServer.cmo BlockchainServer.ml
+# Target: BlockchainServer.cmx, tags: { package(cohttp.async), package(core), ppx(ppx-jane -as-ppx), bin_annot, compile, debug, extension:cmx, extension:ml, file:BlockchainServer.cmx, file:BlockchainServer.ml, implem, native, ocaml, quiet, short_paths, thread }
+ocamlfind ocamlopt -c -w A-4-33-40-41-42-43-34-44 -strict-sequence -g -bin-annot -short-paths -thread -package cohttp.async -package core -ppx 'ppx-jane -as-ppx' -o BlockchainServer.cmx BlockchainServer.ml
+# Target: BlockchainServer.native, tags: { package(cohttp.async), package(core), ppx(ppx-jane -as-ppx), bin_annot, debug, dont_link_with, extension:native, file:BlockchainServer.native, link, native, ocaml, program, quiet, short_paths, thread }
+ocamlfind ocamlopt -linkpkg -g -thread -package cohttp.async -package core BlockchainServer.cmx -o BlockchainServer.native
+# Compilation successful.
