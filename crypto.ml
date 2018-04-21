@@ -1,3 +1,5 @@
+open Yojson.Basic.Util
+
 module BlockChain = struct
 
   type hash = int
@@ -5,7 +7,7 @@ module BlockChain = struct
   type block = {
       prev_hash:hash;
       time_stamp:Unix.tm;
-      soucre:string; (*Public Key*)
+      source:string; (*Public Key*)
       dest:string;
       signature:string;
       nonce:int;
@@ -15,8 +17,6 @@ module BlockChain = struct
       miner:string;
       n:string;
       d:string;
-
-
     }
 
   type blockchain = {
@@ -25,7 +25,26 @@ module BlockChain = struct
       bits:int;
     }
 
-                  
+  let block_of_json j = {
+    prev_hash= j |> member "prev_hash" |> to_int;
+    time_stamp = j |> member "time_stamp" |> Unix.gmtime;
+    source = j |> member "source" |> to_string;
+    dest = j |> member "dest" |> to_string;
+    signature = j |> member "signature" |> to_string;
+    nonce = j |> member "nonce" |> to_int;
+    amount = j |> member "amount" |> to_float;
+    complexity = j |> member "complexity" |> to_int;
+    genesis = j |> member "genesis" |> to_float;
+    miner = j |> member "miner" |> to_string;
+    n = j |> member "n" |> to_string;
+    d = j |> member "d" |> to_string;
+  }
+
+  let blockchain_of_json j = {
+    chain = j |> member "chain" |> to_list |> List.map block_of_json;
+    reward = j |> member "reward" |> to_int ;
+    bits = j |> member "bits" |> to_int 
+  }
 
   let hash_block (b:block) =
     Hashtbl.hash b
@@ -55,7 +74,7 @@ module BlockChain = struct
        tail_complexity {ch with chain=chain'} (s+b.prev_hash)
     | [] -> s
 
-    
+
   let rec measure_complexity ch =
     match ch.chain with
     | b::chain' ->
@@ -67,7 +86,7 @@ module BlockChain = struct
       {ch with chain = b::ch.chain},true
     else
       ch,false
-    
+
 
   let sign_block blk =
     failwith "unimplemented"
