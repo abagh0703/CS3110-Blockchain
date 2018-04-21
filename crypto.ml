@@ -25,14 +25,49 @@ module BlockChain = struct
       bits:int;
     }
 
-  let is_valid_chain ch =
-    failwith "unimplemented"
+                  
 
-  let measure_complexity ch =
-    failwith "unimplemented"
+  let hash_block (b:block) =
+    Hashtbl.hash b
 
-  let add_block blk ch =
-    failwith "unimplemented"
+  let valid_block (b:block) =
+    true
+
+  let valid_hash (b:block) (blks:block list) =
+    match blks with
+    | b'::_ ->
+       hash_block b' = b.prev_hash
+    | [] ->
+       b.prev_hash = 0
+
+  let rec is_valid_chain (ch:blockchain) =
+    match (ch.chain) with
+    | b::chain' ->
+       if valid_block b && valid_hash b chain' then
+         is_valid_chain {ch with chain=chain'}
+       else false
+    | [] -> true
+
+
+  let rec tail_complexity ch s =
+    match ch.chain with
+    | b::chain' ->
+       tail_complexity {ch with chain=chain'} (s+b.prev_hash)
+    | [] -> s
+
+    
+  let rec measure_complexity ch =
+    match ch.chain with
+    | b::chain' ->
+       tail_complexity ch (b.prev_hash)
+    | [] -> 0
+
+  let add_block (b:block) (ch:blockchain) =
+    if hash_block b < 1000000000 && valid_block b then
+      {ch with chain = b::ch.chain},true
+    else
+      ch,false
+    
 
   let sign_block blk =
     failwith "unimplemented"
