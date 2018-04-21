@@ -3,7 +3,7 @@ open Base
 open Async_kernel
 open Cohttp_async
 
-(* compile with: $ corebuild receive_post.native -pkg cohttp.async *)
+(* compile with: $ corebuild BlockchainServer.native -pkg cohttp.async *)
 
 let start_server port () =
   Caml.Printf.eprintf "Listening for HTTP on port %d\n" port;
