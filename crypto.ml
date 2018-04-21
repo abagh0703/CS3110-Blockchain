@@ -15,8 +15,8 @@ module BlockChain = struct
       miner:string;
       n:string;
       d:string;
-      
-      
+
+
     }
 
   type blockchain = {
@@ -72,12 +72,5 @@ module BlockChain = struct
   let sign_block blk =
     failwith "unimplemented"
 
- 
-
-    
-
-             
 
 end
-                      
-    

@@ -89,7 +89,7 @@ module type Blockchain = sig
   val add_block : block -> blockchain -> blockchain
 
   (*
-   * [find_block] block int block returns the block in the [blockchain]
+  . * [find_block] block int block returns the block in the [blockchain]
    * given its hash result.
    * requires: [string] is a legitimate hash result
   *)
