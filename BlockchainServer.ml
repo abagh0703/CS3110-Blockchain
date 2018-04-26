@@ -3,6 +3,9 @@ open Base
 open Async_kernel
 open Cohttp_async
 
+(* Source:
+   https://github.com/mirage/ocaml-cohttp/blob/master/examples/async/receive_post.ml *)
+
 (* compile with: $ corebuild BlockchainServer.native -pkg cohttp.async *)
 
 let start_server port () =
