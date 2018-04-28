@@ -1,17 +1,19 @@
 (* This file is in the public domain *)
 open Base
-open Async_kernel
 open Cohttp_async
 open Mutex
-   
+open Async_kernel
 
-(* compile with: $ corebuild BlockchainServer.native -pkg cohttp.async *)
+
+(* Source:
+   https://github.com/mirage/ocaml-cohttp/blob/master/examples/async/receive_post.ml *)
+(* compile with: $ corebuild bs.native -pkg cohttp.async *)
 
 let f (r, s, m) =
   Mutex.lock m;
   r := s::!r;
   Mutex.unlock m
-  
+
 
 let start_server (r:string list ref) (m:Mutex.t) port _ =
   Caml.Printf.eprintf "Listening for HTTP on port %d\n" port;
