@@ -87,6 +87,11 @@ module BlockChain = struct
     else
       ch,false
 
+  let declare_miner (b:block) (miner:string) =
+    {b with miner = miner}
+
+  let incr_nonce (b:block) =
+    {b with none=b.nonce+1}
 
   let sign_block blk =
     failwith "unimplemented"

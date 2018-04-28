@@ -28,6 +28,8 @@ let () = looper 5555555555
    *)
 
 
+(* To compile, use: ocamlbuild -use-ocamlbuild -use-ocamlfind -I src test.native *)
+
 
 open Mutex
 open Bs

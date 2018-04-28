@@ -25,7 +25,7 @@ module RSA = struct
 
   (* [gcd] returns the greatest common factor of a and b *)
   let rec gcd a b =
-    if b = 0 then a else gcd b (a mod b);;
+    if b = 0 then a else gcd b (a mod b)
 
   (* [gcd_ext] returns a triple with the first two entries as the bezout
    * coefficients, and the last entry as the greatest common divisor of
