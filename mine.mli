@@ -7,10 +7,7 @@ module type User = sig
   (* [user] is the miners user information, stored to
    * get credit for mining blocks
   *)
-  type user = User
-  type block = Block
-  type blockchain = Blockchain
-  type signed_block = SignedBlock
+  type user
 
   val user : user
 
