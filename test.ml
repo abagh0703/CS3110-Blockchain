@@ -28,17 +28,12 @@ let () = looper 5555555555
    *)
 
 
-<<<<<<< HEAD
 (* Compile with: ocamlbuild -use-ocamlfind -I src test.native *)
 (* Run with ./test.native *)
-=======
-(* To compile, use: ocamlbuild -use-ocamlbuild -use-ocamlfind -I src test.native *)
-
->>>>>>> 0741432f3480aa035d47f0bd5aea6d03b93f222e
 
 open Mutex
 open Bs
-open Mine
+(* open Mine *)
 
 
 let r = ref ["start"]
