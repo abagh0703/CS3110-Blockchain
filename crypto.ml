@@ -17,6 +17,7 @@ module BlockChain = struct
       miner:string;
       n:string;
       d:string;
+      msg:string;
     }
 
   type blockchain = {
@@ -39,6 +40,7 @@ module BlockChain = struct
     miner = j |> member "miner" |> to_string;
     n = j |> member "n" |> to_string;
     d = j |> member "d" |> to_string;
+    msg = j |> member "msg" |> to_string;
   }
 
   let blockchain_of_json j = {
@@ -112,12 +114,48 @@ module BlockChain = struct
     else
       ch,false
 
+  let set_miner (b:block) id =
+    {b with miner = id}
+
+  let incr_nonce (b:block) =
+    {b with nonce = b.nonce+1}
+
 
   let sign_block blk priv_key msg =
     failwith "unimplemented"
 
   let check_sig blk =
     failwith "unimplemnted"
+
+
+  let sign_block blk pubk privk c block_chain =
+    let b_list = List.filter (fun b -> blk.source = pubk) block_chain in
+    let msg = (List.length b_list) + 100 in
+    let raisepriv = float_of_int (int_of_float(((float_of_int msg)**(float_of_string privk))) mod c) in
+    let sign = string_of_float raisepriv in
+    {blk with signature = sign; msg = string_of_int msg}
+
+  let check_block blk block_chain =
+    let f_pubk = float_of_string blk.source in
+    let f_sig = float_of_string blk.signature in
+    let msg = int_of_float (f_sig**f_pubk) in
+    msg = int_of_string blk.msg
+
+  let make_block source dest amount = {
+      source = source;
+      dest = dest;
+      amount = amount;
+      time_stamp = int_of_float (Unix.time ());
+      nonce = 0;
+      prev_hash = 0;
+      complexity = 0;
+      miner = "";
+      n = "0";
+      d = "0";
+      genesis = false;
+      signature = "";
+      msg = "";
+    }
 
 
 end
