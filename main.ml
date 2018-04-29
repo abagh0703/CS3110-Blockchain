@@ -1,39 +1,11 @@
-(*let () = print_endline "somethong"
-
-  let prog1 n =
-  let result = ref 0 in
-  let f i =
-    for j = 1 to n do
-      let v = !result in
-      Thread.delay (Random.float 1.);
-      result := v + i;
-      Printf.printf "Value %d\n" !result;
-
-      print_int !result
-    done in
-  ignore (Thread.create f 1);
-  Thread.create f 2
-
-  let t2 = prog1 5
 
 
-  let () = Thread.join t2
-*)
-  (*
-let rec looper n =
-  if n = 0 then () else looper (n-1)
-
-let () = looper 5555555555
-
-   *)
-
-
-(* Compile with: ocamlbuild -use-ocamlfind -I src test.native *)
-(* Run with ./test.native *)
+(* Compile with: ocamlbuild -use-ocamlfind -I src main.native *)
+(* Run with ./main.native *)
 
 open Mutex
 open Bs
-(* open Mine *)
+open User
 
 
 let r = ref ["start"]

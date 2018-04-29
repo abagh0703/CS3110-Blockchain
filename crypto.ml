@@ -6,7 +6,7 @@ module BlockChain = struct
 
   type block = {
       prev_hash:hash;
-      time_stamp:Unix.tm;
+      time_stamp:int;
       source:string; (*Public Key*)
       dest:string;
       signature:string;
@@ -23,18 +23,19 @@ module BlockChain = struct
       chain:(block list);
       reward:int;
       bits:int;
+      initial_msg:int;
     }
 
   let block_of_json j = {
     prev_hash= j |> member "prev_hash" |> to_int;
-    time_stamp = j |> member "time_stamp" |> Unix.gmtime;
+    time_stamp = j |> member "time_stamp" |> to_int;
     source = j |> member "source" |> to_string;
     dest = j |> member "dest" |> to_string;
     signature = j |> member "signature" |> to_string;
     nonce = j |> member "nonce" |> to_int;
     amount = j |> member "amount" |> to_float;
     complexity = j |> member "complexity" |> to_int;
-    genesis = j |> member "genesis" |> to_float;
+    genesis = j |> member "genesis" |> to_bool;
     miner = j |> member "miner" |> to_string;
     n = j |> member "n" |> to_string;
     d = j |> member "d" |> to_string;
@@ -93,8 +94,11 @@ module BlockChain = struct
   let incr_nonce (b:block) =
     {b with nonce=b.nonce+1}
 
-  let sign_block blk =
+  let sign_block blk priv_key msg =
     failwith "unimplemented"
+
+  let check_sig blk =
+    failwith "unimplemnted"
 
 
 end
