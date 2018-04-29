@@ -41,7 +41,7 @@ module User = struct
       else
         mine mine_mux chain_queue chain up_nonce
 
-  let rec run_miner (u:user) mine_mux chain_queue request_mux request_queue blockchain chain_mux =
+  let rec run_miner (u:user) mine_mux (chain_queue:BlockChain.blockchain Queue.t) request_mux (request_queue:BlockChain.block Queue.t) (blockchain:BlockChain.blockchain ref) (chain_mux:Mutex.t) =
     Thread.delay 0.01;
     if Mutex.try_lock request_mux && not(Queue.is_empty request_queue) then
       let b = Queue.pop request_queue in
