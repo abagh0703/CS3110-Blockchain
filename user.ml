@@ -14,6 +14,8 @@ module User = struct
     
 
 
+
+  (*Aram do not call this function, you got that? *)
   let rec mine (mine_mux:Mutex.t) (chain_queue:BlockChain.blockchain Queue.t) chain block =
     if Mutex.try_lock mine_mux then
       if not(Queue.is_empty chain_queue) then
@@ -41,6 +43,8 @@ module User = struct
       else
         mine mine_mux chain_queue chain up_nonce
 
+
+  (* This one needs to be in its own thread, should run continuously. ALl of the mutexes, queues, and the blockchain ref must also be available to the server thread. Make sure to mutex protect everything. You need to call this function. DO you understnd Aram *)
   let rec run_miner (u:user) mine_mux (chain_queue:BlockChain.blockchain Queue.t) request_mux (request_queue:BlockChain.block Queue.t) (blockchain:BlockChain.blockchain ref) (chain_mux:Mutex.t) =
     Thread.delay 0.01;
     if Mutex.try_lock request_mux && not(Queue.is_empty request_queue) then
@@ -61,6 +65,7 @@ module User = struct
       run_miner u mine_mux chain_queue request_mux request_queue blockchain chain_mux
 
 
+  (* These functions are so simple even Aram should be able to tell what they do *)
   let new_user () =
     let key = Cryptokit.RSA.new_key 2048 in
     {pubk = key.e; privk = key.d; c = key.n}
