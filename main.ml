@@ -115,6 +115,7 @@ let rec repl step state =
           let () = state.m <- m in
           let user = User.set_user pkey privkey m in
           let () = state.user <- user in
+          let () = print_endline "config done" in
           repl "mine" state
        | "user" ->
           let pkey = get_pub_key state in
@@ -137,8 +138,11 @@ let rec repl step state =
                             user"
         in repl step state)
    | "mine" ->
-      let () = (block_thread := Thread.create Bs.mk_server_block (blk_ref,blk_mux)) in (*TODO can't ues Mine ? *)
-      let () = (chain_thread := Thread.create Bs.mk_server_chain (chain_ref,chain_mux)) in
+      let () = print_endline "1" in
+      let () = (block_thread := Thread.create Bs.mk_server_block (blk_ref,blk_mux,blkchn, blkchn_mux)) in (*TODO can't ues Mine ? *) 
+      print_endline "2";
+      (*let () = (chain_thread := Thread.create Bs.mk_server_chain (chain_ref,chain_mux)) in *)
+      print_endline "3";
       (*let () = (display_chain_thread := Thread.create *)
       let () = (mine_thread := Thread.create User.run_miner (state.user, chain_mux, chain_ref, blk_mux, blk_ref, blkchn, blkchn_mux)) in
       let () = print_endline "You are now mining! Type 'quit' to quit at any time" in

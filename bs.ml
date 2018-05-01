@@ -34,7 +34,7 @@ let start_server_chain r (m:Mutex.t) port _ =
           Caml.Printf.eprintf "Body: %s" body;
           let () = ignore  (Thread.create append_chain (r, body, m)) in
             let () = Stdio.print_endline body in
-          Server.respond `OK)
+          Server.respond_string "hi")
       | _ -> Server.respond `Method_not_allowed
     )
   >>= fun _ -> Deferred.never ()
@@ -65,7 +65,7 @@ let append_block (r, s, m) =
       
 
 
-let start_server_block r (m:Mutex.t) port _ =
+let start_server_block r (m:Mutex.t) chnref chnmux port _ =
   Cohttp_async.Server.create ~on_handler_error:`Raise
     (Async_extra.Tcp.Where_to_listen.of_port port) (fun ~body _ req ->
       match req |> Cohttp.Request.meth with
@@ -74,19 +74,26 @@ let start_server_block r (m:Mutex.t) port _ =
           Caml.Printf.eprintf "Body: %s" body;
           let () = ignore  (Thread.create append_block (r, body, m)) in
             let () = Stdio.print_endline body in
-          Server.respond `OK)
+            Server.respond `OK)
+      | `GET ->
+         Mutex.lock chnmux;
+         let js = Crypto.BlockChain.json_of_blockchain !chnref in
+         Mutex.unlock chnmux;
+         let txt = Yojson.Basic.Util.to_string js in
+                   
+         Server.respond_string txt
       | _ -> Server.respond `Method_not_allowed
     )
   >>= fun _ -> Deferred.never ()
 
-let mk_server_block (r,(m:Mutex.t)) =
+let mk_server_block (r,(m:Mutex.t), chnref, chnmux) =
   let module Command = Async_extra.Command in
   Command.async_spec
     ~summary:"Simple http server that outputs body of POST's"
     Command.Spec.(empty +>
-                  flag "-p" (optional_with_default 8080 int)
+                  flag "-p" (optional_with_default 8081 int)
                     ~doc:"int Source port to listen on"
-                 ) (start_server_block r m)
+                 ) (start_server_block r m chnref chnmux)
   |> Command.run; ()
 
 
