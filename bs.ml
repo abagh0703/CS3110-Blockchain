@@ -4,6 +4,7 @@ open Cohttp_async
 open Mutex
 open Async_kernel
 open Crypto
+open Types
 open Yojson
    
 
@@ -45,7 +46,7 @@ let mk_server_chain (r,(m:Mutex.t)) =
     Command.Spec.(empty +>
                   flag "-p" (optional_with_default 8080 int)
                     ~doc:"int Source port to listen on"
-                 ) (start_server r m)
+                 ) (start_server_chain r m)
   |> Command.run; ()
 
 
@@ -71,7 +72,7 @@ let start_server_block r (m:Mutex.t) port _ =
       | `POST ->
         (Body.to_string body) >>= (fun body ->
           Caml.Printf.eprintf "Body: %s" body;
-          let () = ignore  (Thread.create append_chain (r, body, m)) in
+          let () = ignore  (Thread.create append_block (r, body, m)) in
             let () = Stdio.print_endline body in
           Server.respond `OK)
       | _ -> Server.respond `Method_not_allowed
@@ -83,7 +84,10 @@ let mk_server_block (r,(m:Mutex.t)) =
   Command.async_spec
     ~summary:"Simple http server that outputs body of POST's"
     Command.Spec.(empty +>
-                  flag "-p" (optional_with_default 8081 int)
+                  flag "-p" (optional_with_default 8080 int)
                     ~doc:"int Source port to listen on"
-                 ) (start_server r m)
+                 ) (start_server_block r m)
   |> Command.run; ()
+
+
+

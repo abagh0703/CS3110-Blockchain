@@ -1,9 +1,11 @@
 open Yojson.Basic.Util
+open Types
 
 module BlockChain = struct
 
   type hash = int
 
+         
   type block = {
       prev_hash:hash;
       time_stamp:int;
@@ -24,7 +26,7 @@ module BlockChain = struct
     chain:(block list);
     reward:int;
     bits:int;
-  }
+    }
 
 
   let empty:blockchain = {

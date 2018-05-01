@@ -16,10 +16,11 @@ module User = struct
 
 
   (*Aram do not call this function, you got that? *)
-  let rec mine (mine_mux:Mutex.t) (chain_queue:BlockChain.blockchain Queue.t) chain block =
+  let rec mine (mine_mux:Mutex.t) (chain_queue:BlockChain.blockchain list ref) chain block =
     if Mutex.try_lock mine_mux then
-      if not(Queue.is_empty chain_queue) then
-        let poten_chain = Queue.pop chain_queue in
+      if !chain_queue <> [] then
+        let poten_chain::remain_queue = !chain_queue in
+        chain_queue := remain_queue;
         let () = Mutex.unlock mine_mux in
         let c1 = BlockChain.measure_complexity chain in
         let c2 = BlockChain.measure_complexity poten_chain in
@@ -45,21 +46,27 @@ module User = struct
 
 
   (* This one needs to be in its own thread, should run continuously. ALl of the mutexes, queues, and the blockchain ref must also be available to the server thread. Make sure to mutex protect everything. You need to call this function. DO you understnd Aram *)
-  let rec run_miner ((u:user), mine_mux, (chain_queue:BlockChain.blockchain Queue.t), request_mux, (request_queue:BlockChain.block Queue.t), (blockchain:BlockChain.blockchain ref), (chain_mux:Mutex.t)) =
+  let rec run_miner ((u:user), mine_mux, (chain_queue:BlockChain.blockchain list ref), request_mux, (request_queue:BlockChain.block list ref), (blockchain:BlockChain.blockchain ref), (chain_mux:Mutex.t)) =
     Thread.delay 0.01;
-    if Mutex.try_lock request_mux && not(Queue.is_empty request_queue) then
-      let b = Queue.pop request_queue in
-      if BlockChain.valid_block b then
-        let b' = BlockChain.set_miner b u.pubk in
-        Mutex.lock chain_mux;
-        let chain' = !blockchain in
-        Mutex.unlock chain_mux;
-        let new_chain = mine mine_mux chain_queue chain' b' in
-        Mutex.lock chain_mux;
-        blockchain := new_chain;
-        Mutex.unlock chain_mux;
-        run_miner (u, mine_mux, chain_queue, request_mux, request_queue, blockchain, chain_mux)
+    if Mutex.try_lock request_mux then
+      if [] <> !request_queue then
+        let b::remaining = !request_queue in
+        request_queue := remaining;
+        Mutex.unlock request_mux;
+        if BlockChain.valid_block b then
+          let b' = BlockChain.set_miner b u.pubk in
+          Mutex.lock chain_mux;
+          let chain' = !blockchain in
+          Mutex.unlock chain_mux;
+          let new_chain = mine mine_mux chain_queue chain' b' in
+          Mutex.lock chain_mux;
+          blockchain := new_chain;
+          Mutex.unlock chain_mux;
+          run_miner (u, mine_mux, chain_queue, request_mux, request_queue, blockchain, chain_mux)
+        else
+          run_miner (u, mine_mux, chain_queue, request_mux, request_queue, blockchain, chain_mux)
       else
+        let () = Mutex.unlock request_mux in
         run_miner (u, mine_mux, chain_queue, request_mux, request_queue, blockchain, chain_mux)
     else
       run_miner (u, mine_mux, chain_queue, request_mux, request_queue, blockchain, chain_mux)
