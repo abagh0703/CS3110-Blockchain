@@ -6,6 +6,8 @@
 open Mutex
 open Bs
 open User
+open Yojson.Basic.Util
+open Cohttp_async
 
 
 let r = ref ["start"]
@@ -14,6 +16,7 @@ let m = Mutex.create ()
 type data = {
   mutable pub_key : string;
   mutable priv_key : string;
+  mutable m : string;
 }
 
 let clean_input str =
@@ -35,7 +38,7 @@ let get_pub_key state =
   read_line ()
   else state.pub_key
 
-let mineThread = ref (Thread.self ())
+let mine_thread = ref (Thread.self ())
 let () = print_endline "Welcome to OCHAIN. Are you a 'miner', 'user', or
  'new'?"
 (* TODO add 2nd paramter for possible options to simplify _ condition *)
@@ -46,31 +49,50 @@ let rec repl step state =
   (match step with
    | "signin" ->
      (match input with
-      | "miner" -> let pkey = get_pub_key state in
-        let () = state.pub_key <- pkey  in
-        repl "mine" state
-      | "user" -> let pkey = get_pub_key state in
-        let () = state.pub_key <- pkey in
-        let () = print_endline "You either type 'balance' to check your balance or 'send' to
-send OCOIN to others." in repl "use" state
-      | "new" -> let () = new_user_orientation () in repl "signin" state
-      | _ -> let () =
+      | "miner" ->
+         let pkey = get_pub_key state in
+         let () = state.pub_key <- pkey  in
+         repl "mine" state
+      | "user" ->
+         let pkey = get_pub_key state in
+         let () = state.pub_key <- pkey in
+         let () = print_endline "You either type 'balance' to check your balance or 'send' to send OCOIN to others." in repl "use" state
+      | "new" ->
+         let () = new_user_orientation () in repl "signin" state
+      | _ ->
+         let () =
                print_endline "Please enter either miner, existing user, or new
                             user"
         in repl step state)
-   | "mine" -> let () = (mineThread := Thread.create Bs.mk_server (r,m))  in (*TODO can't ues Mine ? *)
-let () = print_endline "You are now mining! Type 'quit' to quit at any time" in
-repl "mining" state
-| "mining" -> (match input with
-    | "quit" -> let () = Thread.kill !mineThread in repl "miner" state
-    | _ -> let () = print_endline "Please enter 'quit' if you want to quit" in
-      repl step state)
-| "use" -> (match input with
-    | "balance" -> failwith "unimplemented"
-    | "send" -> failwith "unimplemented"
-    | _ -> let () = print_endline "Please enter either balance or send." in
-  repl step state)
-| _ -> failwith "Internal  error.")
+   | "mine" ->
+      let () = (server_thread := Thread.create Bs.mk_server (r,m))  in (*TODO can't ues Mine ? *)
+      let () = (mine_thread := Thread.create Crypto.BlockChain.run_miner ()) in
+      let () = print_endline "You are now mining! Type 'quit' to quit at any time" in
+      repl "mining" state
+   | "mining" ->
+      (match input with
+       | "quit" -> let () = Thread.kill !mineThread in repl "miner" state
+       | _ -> let () = print_endline "Please enter 'quit' if you want to quit" in
+              repl step state)
+   | "use" ->
+      (match input with
+       | "balance" -> failwith "unimplemented"
+       | "send" ->
+          print_endline "Type in a destination address";
+          let dest = read_line () |> clean_input in
+          print_endline "Type in an amount";
+          let amnt = read_line () |> clean_input |> int_of_string in
+          print_endline "Type a blockchain ip (include the decimal points)";
+          let ip = read_line () |> clean_input in
+          let blk = Crypto.BlockChain.make_block state.pub_key dest amnt in
+          let signed_blk = Crypto.BlockChain.sign_block blk state.pub_key state.priv_key state.m [] in
+          let jsn = Crypto.BlockChain.json_of_block signed_blk |> to_string in
+          post ip jsn;
+          repl step state
+       | _ ->
+          let () = print_endline "Please enter either balance or send." in
+              repl step state)
+   | _ -> failwith "Internal  error.")
 
 let () = repl "signin" {pub_key = ""; priv_key = ""}
 

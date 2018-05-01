@@ -27,6 +27,13 @@ module BlockChain = struct
   }
 
 
+  let empty:blockchain = {
+      chain = [];
+      reward = 10;
+      bits = 2048
+    }
+        
+
   let block_of_json j = {
     prev_hash= j |> member "prev_hash" |> to_int;
     time_stamp = j |> member "time_stamp" |> to_int;
@@ -121,11 +128,11 @@ module BlockChain = struct
     {b with nonce = b.nonce+1}
 
 
-  let sign_block blk priv_key msg =
+  (*let sign_block blk priv_key msg =
     failwith "unimplemented"
 
   let check_sig blk =
-    failwith "unimplemnted"
+    failwith "unimplemnted"*)
 
 
   let sign_block blk pubk privk c block_chain =
