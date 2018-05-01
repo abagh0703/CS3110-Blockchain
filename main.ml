@@ -178,7 +178,6 @@ let rec repl step state =
 
 let () = repl "signin" {pub_key = ""; priv_key = ""; m = ""; user = User.new_user ()}
 
-
 (* let point = Thread.create Bs.mk_server (r,m) *)
 
 (* let rec f r m =
