@@ -1,3 +1,4 @@
+open Core.Std
 open Yojson.Basic.Util
 open Types
 
@@ -7,20 +8,20 @@ module BlockChain = struct
 
          
   type block = {
-      prev_hash:hash;
-      time_stamp:int;
-      source:string; (*Public Key*)
-      dest:string;
-      signature:string;
-      nonce:int;
-      amount:float;
-      complexity:int;
-      genesis:bool;
-      miner:string;
-      n:string;
-      d:string;
-      msg:string;
-    }
+    prev_hash:hash;
+    time_stamp:int;
+    source:string; (*Public Key*)
+    dest:string;
+    signature:string;
+    nonce:int;
+    amount:float;
+    complexity:int;
+    genesis:bool;
+    miner:string;
+    n:string;
+    d:string;
+    msg:string;
+  }
 
   type blockchain = {
     chain:(block list);
@@ -30,11 +31,11 @@ module BlockChain = struct
 
 
   let empty:blockchain = {
-      chain = [];
-      reward = 10;
-      bits = 2048
-    }
-        
+    chain = [];
+    reward = 10;
+    bits = 2048
+  }
+
 
   let block_of_json j = {
     prev_hash= j |> member "prev_hash" |> to_int;
@@ -81,6 +82,31 @@ module BlockChain = struct
       ("bits", `Int blockchain.bits)
     ]
 
+  let print_chain_elements chain =
+    printf "Prev hash: %d\n " (chain.prev_hash);
+    printf "Time stamp: %s\n " (chain.time_stamp);
+    printf "Source: %s\n " (chain.source);
+    printf "Destination: %s\n " (chain.dest);
+    printf "Signature: %s\n " (chain.signature);
+    printf "Nonce: %d\n " (chain.nonce);
+    printf "Amount: %f\n " (chain.amount);
+    printf "Complexity: %d\n " (chain.complexity);
+    printf "Genesis: %s\n"  (string_of_bool chain.genesis);
+    printf "Miner: %s\n " (chain.miner);
+    printf "n: %s\n " (chain.n);
+    printf "d: %s\n " (chain.d)
+
+  let rec get_parsed_blocks blocklist =
+    match blocklist with
+    |[] -> ""
+    |blocks::t -> print_chain_elements blocks ^ get_parsed_blocks t
+
+  let filename file () =
+    let json = Yojson.Basic.from_file file in
+    let blockchain = blockchain_of_json json in
+    printf "Chain: %s\n" (get_parsed_blocks blockchain.chain);
+    printf "Reward: %d\n" (blockchain.reward);
+    printf "Bits: %d\n" (blockchain.bits)
 
   let hash_block (b:block) =
     Hashtbl.hash b
@@ -133,7 +159,7 @@ module BlockChain = struct
   (*let sign_block blk priv_key msg =
     failwith "unimplemented"
 
-  let check_sig blk =
+    let check_sig blk =
     failwith "unimplemnted"*)
 
 
@@ -151,20 +177,20 @@ module BlockChain = struct
     msg = int_of_string blk.msg
 
   let make_block source dest amount = {
-      source = source;
-      dest = dest;
-      amount = amount;
-      time_stamp = int_of_float (Unix.time ());
-      nonce = 0;
-      prev_hash = 0;
-      complexity = 0;
-      miner = "";
-      n = "0";
-      d = "0";
-      genesis = false;
-      signature = "";
-      msg = "";
-    }
+    source = source;
+    dest = dest;
+    amount = amount;
+    time_stamp = int_of_float (Unix.time ());
+    nonce = 0;
+    prev_hash = 0;
+    complexity = 0;
+    miner = "";
+    n = "0";
+    d = "0";
+    genesis = false;
+    signature = "";
+    msg = "";
+  }
 
 
 end
