@@ -1,0 +1,6 @@
+#directory "_build";;
+#require "unix";;
+#require "crypto"
+#require "mine"
+#load "crypto.cmo";;
+#load "mine.cmo";;

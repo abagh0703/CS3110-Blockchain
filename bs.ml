@@ -4,7 +4,6 @@ open Cohttp_async
 open Mutex
 open Async_kernel
 open Crypto
-open Types
 open Yojson
    
 
@@ -22,7 +21,7 @@ let append_chain (r, s, m) =
     Mutex.unlock m
   with
     _ -> ()
-      
+
 
 
 let start_server_chain r (m:Mutex.t) port _ =
@@ -62,7 +61,7 @@ let append_block (r, s, m) =
     Mutex.unlock m
   with
     _ -> ()
-      
+
 
 
 let start_server_block r (m:Mutex.t) chnref chnmux port _ =
@@ -80,7 +79,7 @@ let start_server_block r (m:Mutex.t) chnref chnmux port _ =
          let js = Crypto.BlockChain.json_of_blockchain !chnref in
          Mutex.unlock chnmux;
          let txt = Yojson.Basic.Util.to_string js in
-                   
+
          Server.respond_string txt
       | _ -> Server.respond `Method_not_allowed
     )
@@ -95,6 +94,3 @@ let mk_server_block (r,(m:Mutex.t), chnref, chnmux) =
                     ~doc:"int Source port to listen on"
                  ) (start_server_block r m chnref chnmux)
   |> Command.run; ()
-
-
-

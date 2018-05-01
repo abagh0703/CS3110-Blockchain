@@ -3,7 +3,7 @@ open Mutex
 open Crypto
 open Rsa
 open Cryptokit
-   
+
 
 module User = struct
 
@@ -11,7 +11,7 @@ module User = struct
 
   let get_user file_name =
     failwith "unimp"
-    
+
 
 
 
@@ -86,9 +86,4 @@ module User = struct
   let make_transaction user dest amount chain =
     let block = BlockChain.make_block user.pubk dest amount in
     BlockChain.sign_block block user.pubk user.privk (int_of_string user.c) chain
-    
-
-    
-
 end
-  

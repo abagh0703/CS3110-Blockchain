@@ -1,0 +1,10 @@
+B _build
+PKG oUnit
+PKG str
+PKG unix
+PKG core
+PKG async
+PKG cohttp
+PKG cohttp.async
+PKG cryptokit
+PKG yojson
