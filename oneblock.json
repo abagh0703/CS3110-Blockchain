@@ -1,19 +1,53 @@
 {
   "chain":
-  [{
+  {[{
       "prev_hash": 0,
       "time_stamp":1524874389,
-      "source": "soph",
+      "source": "2",
       "dest": "personA",
-      "signature": "3294242",
+      "signature": "36",
       "nonce": 123,
       "amount": 3.50,
       "complexity": 15,
       "genesis": false,
       "miner": "personB",
-      "n":"2",
-      "d":"42"
-  }],
+      "n":"83487343",
+      "msg":"6"
+  }]},
   "reward": 250,
   "bits": 64
 }
+
+
+
+"{
+\"prev_hash\": 0,
+\"time_stamp\": 1524874389,
+\"source\": \"2\",
+\"dest\": \"personA\",
+\"signature\": \"36\",
+\"nonce\": 123,
+\"amount\": 3.50,
+\"complexity\": 15,
+\"genesis\": false,
+\"miner\": \"personB\",
+\"n\": \"83487343\",
+\"d\": \"3424\",
+\"msg\": \"6\"
+}"
+
+'{
+      "prev_hash": 0,
+      "time_stamp":1524874389,
+      "source": "2",
+      "dest": "personA",
+      "signature": "36",
+      "nonce": 123,
+      "amount": 3.50,
+      "complexity": 15,
+      "genesis": false,
+      "miner": "personB",
+      "n":"26343",
+      "d":"3432",
+      "msg":"6"
+  }'

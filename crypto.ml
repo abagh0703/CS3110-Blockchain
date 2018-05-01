@@ -35,7 +35,7 @@ module BlockChain = struct
     }
 
   let block_to_string block_chain =
-    List.map (fun x -> print_string (x^" ")) block_chain
+    List.fold_left (fun acc x -> acc^("source: "^x.source^" nonce:"^(string_of_int x.nonce)^", ")) (string_of_int block_chain.bits) block_chain.chain 
 
   let block_of_json j = {
     prev_hash= j |> member "prev_hash" |> to_int;
@@ -141,13 +141,10 @@ module BlockChain = struct
 
   (* [sign_block] let the sender with private key [privk] sign the block
    * [blk] *)
-    let sign_block blk sender block_chain =
-      let b_list = List.filter (fun b -> blk.source = sender.pubk) block_chain in
-      (* take out all blocks in blocks chain created by this sender *)
+    let sign_block blk pubk privk c block_chain =
+      let b_list = List.filter (fun b -> blk.source = pubk) block_chain in
       let msg = (List.length b_list) + 100 in
-      (* customize the message *)
-      let raisepriv = (float_of_int msg)**(float_of_string sender.privk) in
-      (* encrypt the message *)
+      let raisepriv = float_of_int (int_of_float(((float_of_int msg)**(float_of_string privk))) mod c) in
       let sign = string_of_float raisepriv in
       {blk with signature = sign; msg = string_of_int msg}
 
