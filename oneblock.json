@@ -1,10 +1,10 @@
 {
   "chain":
-  {[{
+  [{
       "prev_hash": 0,
       "time_stamp":1524874389,
       "source": "2",
-      "dest": "personA",
+      "dest": "23",
       "signature": "36",
       "nonce": 123,
       "amount": 3.50,
@@ -12,8 +12,9 @@
       "genesis": false,
       "miner": "personB",
       "n":"83487343",
+      "d":"837093280",
       "msg":"6"
-  }]},
+  }],
   "reward": 250,
   "bits": 64
 }

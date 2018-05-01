@@ -34,8 +34,7 @@ module BlockChain = struct
       bits = 2048
     }
 
-  let block_to_string block_chain =
-    List.fold_left (fun acc x -> acc^("source: "^x.source^" nonce:"^(string_of_int x.nonce)^", ")) (string_of_int block_chain.bits) block_chain.chain 
+  
 
   let block_of_json j = {
     prev_hash= j |> member "prev_hash" |> to_int;
@@ -83,6 +82,15 @@ module BlockChain = struct
     ]
 
 
+  let block_to_string block =
+    let j = json_of_block block in
+    Yojson.to_string j
+
+  let block_chain_to_string block_chain =
+    let j = json_of_blockchain block_chain in
+    Yojson.to_string j
+
+
   let hash_block (b:block) =
     Hashtbl.hash b
 
@@ -119,7 +127,7 @@ module BlockChain = struct
     | [] -> 0
 
   let add_block (b:block) (ch:blockchain) =
-    if hash_block b < 1000000000 && valid_block b then
+    if hash_block b < 100000 && valid_block b then
       {ch with chain = b::ch.chain},true
     else
       ch,false

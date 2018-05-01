@@ -8,3 +8,4 @@ PKG cohttp
 PKG cohttp.async
 PKG cryptokit
 PKG yojson
+B +threads 
