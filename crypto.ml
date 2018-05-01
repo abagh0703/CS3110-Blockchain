@@ -1,27 +1,25 @@
-open Core.Std
 open Yojson.Basic.Util
-open Types
 
 module BlockChain = struct
 
   type hash = int
 
-
+         
   type block = {
-    prev_hash:hash;
-    time_stamp:int;
-    source:string; (*Public Key*)
-    dest:string;
-    signature:string;
-    nonce:int;
-    amount:float;
-    complexity:int;
-    genesis:bool;
-    miner:string;
-    n:string;
-    d:string;
-    msg:string;
-  }
+      prev_hash:hash;
+      time_stamp:int;
+      source:string; (*Public Key*)
+      dest:string;
+      signature:string;
+      nonce:int;
+      amount:float;
+      complexity:int;
+      genesis:bool;
+      miner:string;
+      n:string;
+      d:string;
+      msg:string;
+    }
 
   type blockchain = {
     chain:(block list);
@@ -31,11 +29,11 @@ module BlockChain = struct
 
 
   let empty:blockchain = {
-    chain = [];
-    reward = 10;
-    bits = 2048
-  }
-
+      chain = [];
+      reward = 10;
+      bits = 2048
+    }
+        
 
   let block_of_json j = {
     prev_hash= j |> member "prev_hash" |> to_int;
@@ -82,31 +80,6 @@ module BlockChain = struct
       ("bits", `Int blockchain.bits)
     ]
 
-  let print_chain_elements chain =
-    printf "Prev hash: %d\n " (chain.prev_hash);
-    printf "Time stamp: %s\n " (chain.time_stamp);
-    printf "Source: %s\n " (chain.source);
-    printf "Destination: %s\n " (chain.dest);
-    printf "Signature: %s\n " (chain.signature);
-    printf "Nonce: %d\n " (chain.nonce);
-    printf "Amount: %f\n " (chain.amount);
-    printf "Complexity: %d\n " (chain.complexity);
-    printf "Genesis: %s\n"  (string_of_bool chain.genesis);
-    printf "Miner: %s\n " (chain.miner);
-    printf "n: %s\n " (chain.n);
-    printf "d: %s\n " (chain.d)
-
-  let rec get_parsed_blocks blocklist =
-    match blocklist with
-    |[] -> ""
-    |blocks::t -> print_chain_elements blocks ^ get_parsed_blocks t
-
-  let filename file () =
-    let json = Yojson.Basic.from_file file in
-    let blockchain = blockchain_of_json json in
-    printf "Chain: %s\n" (get_parsed_blocks blockchain.chain);
-    printf "Reward: %d\n" (blockchain.reward);
-    printf "Bits: %d\n" (blockchain.bits)
 
   let hash_block (b:block) =
     Hashtbl.hash b
@@ -158,50 +131,38 @@ module BlockChain = struct
 
   (*let sign_block blk priv_key msg =
     failwith "unimplemented"
-
-    let check_sig blk =
+  let check_sig blk =
     failwith "unimplemnted"*)
 
-  let make_block source dest amount block_chain = {
-    source = source;
-    dest = dest;
-    amount = amount;
-    time_stamp = int_of_float (Unix.time ());
-    nonce = 0;
-    prev_hash = 0;
-    complexity = 0;
-    miner = "";
-    n = "0";
-    d = "0";
-    genesis = if List.length block_chain = 0 then true else false;
-    signature = "";
-    msg = "";
-  }
 
-  type user = {pubk: string; privk: string; c: string}
-
-(* [sign_block] let the sender with private key [privk] sign the block
- * [blk] *)
-  let sign_block blk sender block_chain =
-    let b_list = List.filter (fun b -> blk.source = sender.pubk) block_chain in
-    (* take out all blocks in blocks chain created by this sender *)
+  let sign_block blk pubk privk c block_chain =
+    let b_list = List.filter (fun b -> blk.source = pubk) block_chain in
     let msg = (List.length b_list) + 100 in
-    (* customize the message *)
-    let raisepriv = (float_of_int msg)**(float_of_string sender.privk) in
-    (* encrypt the message *)
+    let raisepriv = float_of_int (int_of_float(((float_of_int msg)**(float_of_string privk))) mod c) in
     let sign = string_of_float raisepriv in
     {blk with signature = sign; msg = string_of_int msg}
 
-(* *)
   let check_block blk block_chain =
     let f_pubk = float_of_string blk.source in
-    (* get the public key *)
     let f_sig = float_of_string blk.signature in
-    (* get the signiture *)
     let msg = int_of_float (f_sig**f_pubk) in
-    (* decrypt the message *)
-    if msg = int_of_string blk.msg
-    then true
-    else false
+    msg = int_of_string blk.msg
+
+  let make_block source dest amount = {
+      source = source;
+      dest = dest;
+      amount = amount;
+      time_stamp = int_of_float (Unix.time ());
+      nonce = 0;
+      prev_hash = 0;
+      complexity = 0;
+      miner = "";
+      n = "0";
+      d = "0";
+      genesis = false;
+      signature = "";
+      msg = "";
+    }
+
 
 end
