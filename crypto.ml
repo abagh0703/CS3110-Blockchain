@@ -4,7 +4,7 @@ module BlockChain = struct
 
   type hash = int
 
-         
+
   type block = {
       prev_hash:hash;
       time_stamp:int;
@@ -33,7 +33,9 @@ module BlockChain = struct
       reward = 10;
       bits = 2048
     }
-        
+
+  let block_to_string block_chain =
+    List.map (fun x -> print_string (x^" ")) block_chain
 
   let block_of_json j = {
     prev_hash= j |> member "prev_hash" |> to_int;
@@ -135,18 +137,31 @@ module BlockChain = struct
     failwith "unimplemnted"*)
 
 
-  let sign_block blk pubk privk c block_chain =
-    let b_list = List.filter (fun b -> blk.source = pubk) block_chain in
-    let msg = (List.length b_list) + 100 in
-    let raisepriv = float_of_int (int_of_float(((float_of_int msg)**(float_of_string privk))) mod c) in
-    let sign = string_of_float raisepriv in
-    {blk with signature = sign; msg = string_of_int msg}
+    type user = {pubk: string; privk: string; c: string}
 
-  let check_block blk block_chain =
-    let f_pubk = float_of_string blk.source in
-    let f_sig = float_of_string blk.signature in
-    let msg = int_of_float (f_sig**f_pubk) in
-    msg = int_of_string blk.msg
+  (* [sign_block] let the sender with private key [privk] sign the block
+   * [blk] *)
+    let sign_block blk sender block_chain =
+      let b_list = List.filter (fun b -> blk.source = sender.pubk) block_chain in
+      (* take out all blocks in blocks chain created by this sender *)
+      let msg = (List.length b_list) + 100 in
+      (* customize the message *)
+      let raisepriv = (float_of_int msg)**(float_of_string sender.privk) in
+      (* encrypt the message *)
+      let sign = string_of_float raisepriv in
+      {blk with signature = sign; msg = string_of_int msg}
+
+  (* *)
+    let check_block blk block_chain =
+      let f_pubk = float_of_string blk.source in
+      (* get the public key *)
+      let f_sig = float_of_string blk.signature in
+      (* get the signiture *)
+      let msg = int_of_float (f_sig**f_pubk) in
+      (* decrypt the message *)
+      if msg = int_of_string blk.msg
+      then true
+      else false
 
   let make_block source dest amount = {
       source = source;
