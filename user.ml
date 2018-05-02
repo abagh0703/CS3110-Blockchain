@@ -84,6 +84,6 @@ module User = struct
     {pubk=pubk; privk=privk; c=c}
 
   let make_transaction user dest amount chain =
-    let block = BlockChain.make_block user.pubk dest amount in
+    let block = BlockChain.make_block user.pubk dest amount user.c in
     BlockChain.sign_block block user.pubk user.privk (int_of_string user.c) chain
 end

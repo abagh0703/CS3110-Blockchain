@@ -3,6 +3,14 @@ open User
 open OUnit2
 open Yojson
 
+(* There are several paramteres that are currently hardcoded in the interest of rapid devlepment, they are listed below *)
+
+let max_hash = 100000
+
+(* is_valid_block is currently unimplemented, it returns true always currently for implementation purposes. Consequently, its test cases will fail *)
+
+(* Additionally, rsa signing with cryptokit is not yet implemented, we have our own signing system as a placehold *)
+   
 let st1 = Yojson.Basic.from_string "{
   \"chain\":
   [{
@@ -80,29 +88,47 @@ let () = print_endline (block_to_string b1)
 let m = Mutex.create ()
 
 let chn_queue = ref []
-        
+
+let u = User.set_user "7" "23" "55"
        
 let blkchn2 = User.mine m chn_queue ch1 b1
+let b2' = List.hd blkchn2.chain
 
 let () = print_endline (block_chain_to_string blkchn2)
        
 let () = print_int (hash_block b1)
+
+let ub = User.make_transaction u "123" 7.60 blkchn2.chain
         
-   
-let tests =
-  [
-    "trivial" >:: (fun _ -> assert_equal 1 1);
-  ]
+let t = check_block ub blkchn2
+
+let () = print_endline (block_to_string ub)
+let () = print_endline ub.msg
+
+let () = print_endline ""
+let () = if t then print_endline "true" else print_endline "false"
+       
 
 let crypto_tests =
   [
-    "hash" >:: (fun _ -> assert (hash_block b1 <> hash_block b2))
+    "hash" >:: (fun _ -> assert (hash_block b1 <> hash_block b2));
+    "proper mining" >:: (fun _ -> assert (hash_block b2' < max_hash));
+    "can find valid chains" >:: (fun _ -> assert (not (is_valid_chain blkchn2)));
+
   ]
+
+let user_tests =
+  [
+    "source" >:: (fun _ -> assert_equal ub.source "7");
+    "dest" >:: (fun _ -> assert_equal ub.dest "123");
+    "signature" >:: (fun _ -> assert (check_block ub blkchn2));
+  ]
+  
 
 let suite =
   [
-    "tests" >::: tests;
     "crypto" >::: crypto_tests;
+    "user" >::: user_tests;
   ]
 
 let _ = run_test_tt_main ("test suite" >::: suite)
