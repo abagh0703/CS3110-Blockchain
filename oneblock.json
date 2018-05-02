@@ -43,7 +43,7 @@
       "source": "2",
       "dest": "personA",
       "signature": "36",
-      "nonce": 123,
+      "nonce": 173,
       "amount": 3.50,
       "complexity": 15,
       "genesis": false,
