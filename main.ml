@@ -95,91 +95,92 @@ let block_thread = ref (Thread.self ())
 
 
 
-let () = print_endline "Welcome to OCHAIN."
+let () = print_endline "Welcome to OCHAIN!"
 (* TODO add 2nd paramter for possible options to simplify _ condition *)
+
 
 
 let rec repl step state =
   (match step with
    | "signin" ->
-     let () = print_endline "Are you a 'miner' (use your computer's resources
-     to mine for OCOINs), 'user' (send OCOINs and check your balance), or
-      'new' (a new user to all of this)?" in
-      (match read_line () |> clean_input with
-       | "miner" ->
-          let pkey = get_pub_key state in
-          let () = state.pub_key <- pkey in
-          let privkey = get_priv_key state in
-          let () = state.priv_key <- privkey in
-          let m = get_m state in
-          let () = state.m <- m in
-          let user = User.set_user pkey privkey m in
-          let () = state.user <- user in
-          let () = print_endline "config done" in
-          repl "mine" state
-       | "user" ->
-          let pkey = get_pub_key state in
-          let () = state.pub_key <- pkey in
-          let pkey = get_pub_key state in
-          let () = state.pub_key <- pkey in
-          let privkey = get_priv_key state in
-          let () = state.priv_key <- privkey in
-          let m = get_m state in
-          let () = state.m <- m in
-          let user = User.set_user pkey privkey m in
-          let () = state.user <- user in
-          repl "use" state
-       | "new" ->
-          let () = new_user_orientation () in repl "signin" state
+     let () = print_endline (
+         "Are you a 'miner' (use your computer's resources to mine for OCOINs),"^
+         " 'user' (send OCOINs and check your balance), or 'new' (a new user" ^
+         " to all of this)?") in
+     (match read_line () |> clean_input with
+      | "miner" ->
+        let pkey = get_pub_key state in
+        let () = state.pub_key <- pkey in
+        let privkey = get_priv_key state in
+        let () = state.priv_key <- privkey in
+        let m = get_m state in
+        let () = state.m <- m in
+        let user = User.set_user pkey privkey m in
+        let () = state.user <- user in
+        let () = print_endline "config done" in
+        repl "mine" state
+      | "user" ->
+        let pkey = get_pub_key state in
+        let () = state.pub_key <- pkey in
+        let pkey = get_pub_key state in
+        let () = state.pub_key <- pkey in
+        let privkey = get_priv_key state in
+        let () = state.priv_key <- privkey in
+        let m = get_m state in
+        let () = state.m <- m in
+        let user = User.set_user pkey privkey m in
+        let () = state.user <- user in
+        repl "use" state
+      | "new" ->
+        let () = new_user_orientation () in repl "signin" state
       | _ ->
-         let () =
-           print_endline "Sorry, invalid command."
+        let () =
+          print_endline "Sorry, invalid command."
         in repl step state)
    | "mine" ->
-      let () = print_endline "1" in
-      let () = (block_thread := Thread.create Bs.mk_server_block (blk_ref,blk_mux,blkchn, blkchn_mux)) in (*TODO can't ues Mine ? *)
-      print_endline "2";
-      (*let () = (chain_thread := Thread.create Bs.mk_server_chain (chain_ref,chain_mux)) in *)
-      print_endline "3";
-      (*let () = (display_chain_thread := Thread.create *)
-      let () = (mine_thread := Thread.create User.run_miner (state.user, chain_mux, chain_ref, blk_mux, blk_ref, blkchn, blkchn_mux)) in
-      repl "mining" state
+     (* let () = print_endline "1" in *)
+     let () = (block_thread := Thread.create Bs.mk_server_block (blk_ref,blk_mux,blkchn, blkchn_mux)) in (*TODO can't ues Mine ? *)
+     (* print_endline "2"; *)
+     (*let () = (chain_thread := Thread.create Bs.mk_server_chain (chain_ref,chain_mux)) in *)
+     (* print_endline "3"; *)
+     (*let () = (display_chain_thread := Thread.create *)
+     let () = (mine_thread := Thread.create User.run_miner (state.user, chain_mux, chain_ref, blk_mux, blk_ref, blkchn, blkchn_mux)) in
+     repl "mining" state
    | "mining" ->
      let () = print_endline "You're mining. Please enter 'quit' if you want to quit" in
-      (match read_line () |> clean_input with
-       | "quit" ->
-          let () = Thread.kill !mine_thread in
-          let () = Thread.kill !block_thread in
-          let () = Thread.kill !chain_thread in
-          repl "miner" state
-       | _ ->
-         let () = print_endline "Sorry, invalid command." in
-              repl step state)
+     (match read_line () |> clean_input with
+      | "quit" ->
+        let () = Thread.kill !mine_thread in
+        let () = Thread.kill !block_thread in
+        let () = Thread.kill !chain_thread in
+        repl "miner" state
+      | _ ->
+        let () = print_endline "Sorry, invalid command." in
+        repl step state)
    | "use" ->
      let () = print_endline "You either type 'balance' to check your balance or
      'send' to send OCOIN to others." in
-      (match read_line () |> clean_input with
-       | "balance" -> failwith "unimplemented"
-       | "send" ->
-          print_endline "Type in a destination address";
-          let dest = read_line () |> clean_input in
-          print_endline "Type in an amount";
-          let amnt = read_line () |> clean_input |> float_of_string in
-          print_endline "Type a blockchain ip (include the decimal points)";
-          let ip = read_line () |> clean_input in
-          let blk = Crypto.BlockChain.make_block state.pub_key dest amnt in
-          let signed_blk = Crypto.BlockChain.sign_block blk state.pub_key state.priv_key (int_of_string state.m) [] in
-          let jsn = Crypto.BlockChain.json_of_block signed_blk |> to_string in
-          (*post ip jsn;*)
-          repl step state
-       | _ ->
-         let () = print_endline "Sorry, invalid command." in
-              repl step state)
+     (match read_line () |> clean_input with
+      | "balance" -> failwith "unimplemented"
+      | "send" ->
+        print_endline "Type in a destination address";
+        let dest = read_line () |> clean_input in
+        print_endline "Type in an amount";
+        let amnt = read_line () |> clean_input |> float_of_string in
+        print_endline "Type a blockchain ip (include the decimal points)";
+        let ip = read_line () |> clean_input in
+        let blk = Crypto.BlockChain.make_block state.pub_key dest amnt in
+        let signed_blk = Crypto.BlockChain.sign_block blk state.pub_key state.priv_key (int_of_string state.m) [] in
+        let jsn = Crypto.BlockChain.json_of_block signed_blk |> to_string in
+        (*post ip jsn;*)
+        repl step state
+      | _ ->
+        let () = print_endline "Sorry, invalid command." in
+        repl step state)
    | _ -> failwith "Internal  error.")
 
+
 let () = repl "signin" {pub_key = ""; priv_key = ""; m = ""; user = User.new_user ()}
-
-
 
 (* let point = Thread.create Bs.mk_server (r,m) *)
 

@@ -5,7 +5,7 @@ repl:
 	ocamlbuild -use-ocamlfind -I src main.native && ./main.native
 
 compile:
-	ocamlbuild -use-ocamlfind user.cmo crypto.cmo bs.mlo rsa.mlo main.mlo
+	ocamlbuild -use-ocamlfind user.cmo crypto.cmo bs.cmo rsa.cmo main.cmo
 
 zip:
 	zip CS3110-BlockChain.zip *.ml*

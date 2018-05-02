@@ -74,7 +74,7 @@ module User = struct
 
   (* These functions are so simple even Aram should be able to tell what they do *)
   let new_user () =
-    let key = Cryptokit.RSA.new_key 2048 in
+    let key = Cryptokit.RSA.new_key 128 in 
     {pubk = key.e; privk = key.d; c = key.n}
 
   let unpack_user (u:user) =
