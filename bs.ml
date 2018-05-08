@@ -83,7 +83,7 @@ let start_server_block r (m:Mutex.t) (chnref:Crypto.BlockChain.blockchain ref) c
          Mutex.lock chnmux;
          let ch = !chnref in
          Mutex.unlock chnmux;
-         let txt = Crypto.BlockChain.block_to_string ch in
+         let txt = Crypto.BlockChain.block_chain_to_string ch in
 
          Server.respond_string txt
       | _ -> Server.respond `Method_not_allowed

@@ -185,7 +185,7 @@ let rec repl step state =
         let amnt = read_line () |> clean_input |> float_of_string in
         print_endline "Type a blockchain ip (include the decimal points)";
         let ip = read_line () |> clean_input in
-        let blk = Crypto.BlockChain.make_block state.pub_key dest amnt in
+        let blk = Crypto.BlockChain.make_block state.pub_key dest amnt state.m in
         let signed_blk = Crypto.BlockChain.sign_block blk state.pub_key state.priv_key (int_of_string state.m) [] in
         let jsn = Crypto.BlockChain.json_of_block signed_blk |> to_string in
         (*post ip jsn;*)

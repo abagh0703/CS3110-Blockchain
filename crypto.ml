@@ -34,8 +34,7 @@ module BlockChain = struct
       bits = 2048
     }
 
-  let block_to_string block_chain =
-    List.fold_left (fun acc x -> acc^("source: "^x.source^" nonce:"^(string_of_int x.nonce)^", ")) (string_of_int block_chain.bits) block_chain.chain 
+  
 
   let block_of_json j = {
     prev_hash= j |> member "prev_hash" |> to_int;
@@ -71,6 +70,7 @@ module BlockChain = struct
       ("complexity", `Int block.complexity);
       ("genesis", `Bool block.genesis);
       ("miner", `String block.miner);
+      ("msg", `String block.msg);
       ("n", `String block.n);
       ("d", `String block.d);
     ]
@@ -81,6 +81,15 @@ module BlockChain = struct
       ("reward", `Int blockchain.reward);
       ("bits", `Int blockchain.bits)
     ]
+
+
+  let block_to_string block =
+    let j = json_of_block block in
+    Yojson.to_string j
+
+  let block_chain_to_string block_chain =
+    let j = json_of_blockchain block_chain in
+    Yojson.to_string j
 
 
   let hash_block (b:block) =
@@ -119,7 +128,7 @@ module BlockChain = struct
     | [] -> 0
 
   let add_block (b:block) (ch:blockchain) =
-    if hash_block b < 1000000000 && valid_block b then
+    if hash_block b < 100000 && valid_block b then
       {ch with chain = b::ch.chain},true
     else
       ch,false
@@ -137,30 +146,40 @@ module BlockChain = struct
     failwith "unimplemnted"*)
 
 
-    type user = {pubk: string; privk: string; c: string}
+  type user = {pubk: string; privk: string; c: string}
+
+  let nonnegmod a b =
+      let c = a mod b in
+      if c < 0 then
+        c + b
+      else
+        c
 
   (* [sign_block] let the sender with private key [privk] sign the block
    * [blk] *)
     let sign_block blk pubk privk c block_chain =
       let b_list = List.filter (fun b -> blk.source = pubk) block_chain in
-      let msg = (List.length b_list) + 100 in
-      let raisepriv = float_of_int (int_of_float(((float_of_int msg)**(float_of_string privk))) mod c) in
-      let sign = string_of_float raisepriv in
+      let msg = (List.length b_list) + 2 in
+      let raisepriv = int_of_float(((float_of_int msg)**(float_of_string privk))) in
+      let sgn = nonnegmod raisepriv c in
+      let sign = string_of_int sgn in
       {blk with signature = sign; msg = string_of_int msg}
 
+    
+      
   (* *)
     let check_block blk block_chain =
       let f_pubk = float_of_string blk.source in
       (* get the public key *)
       let f_sig = float_of_string blk.signature in
       (* get the signiture *)
-      let msg = int_of_float (f_sig**f_pubk) in
+      let msg = nonnegmod (int_of_float (f_sig**f_pubk)) (int_of_string blk.n) in
       (* decrypt the message *)
       if msg = int_of_string blk.msg
       then true
       else false
 
-  let make_block source dest amount = {
+  let make_block source dest amount n = {
       source = source;
       dest = dest;
       amount = amount;
@@ -169,7 +188,7 @@ module BlockChain = struct
       prev_hash = 0;
       complexity = 0;
       miner = "";
-      n = "0";
+      n = n;
       d = "0";
       genesis = false;
       signature = "";
