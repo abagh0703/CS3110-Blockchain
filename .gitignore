@@ -8,7 +8,9 @@
 *.cmxs
 *.cmxa
 *.~
-
+*.zip
+log.txt
+gitlog.txt
 
 # ocamlbuild working directory
 _build/
