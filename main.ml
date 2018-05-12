@@ -9,6 +9,7 @@ open User
 open Yojson.Basic.Util
 open Cohttp_async
 open Crypto
+open Bc
 (*
 type block = {
       prev_hash:int;
@@ -74,12 +75,12 @@ let clean_input str =
 
 let new_user_orientation () =
   let u = User.new_user () in
-  let (pub,priv,m) = User.unpack_user u in
-  let () = print_endline "Welcome! Here are your public and private keys. You
-                          will need them for everything here, so store them somewhere safe!" in
-  print_endline ("Public key: "^pub);
-  print_endline ("Private key: "^priv);
-  print_endline ("Modulus: "^m);
+  print_endline "What would you like to name your new key file:";
+  print_endline "Note, the extension .key will be added automatically.";
+  let name = (read_line ()) in
+  User.save_user u (name^".key");
+  User.make_payment_file u (name^".to");
+  print_endline ("Welcome! Your configuration file has been saved to"^name);
   print_endline "Now, would you like to be a 'miner' or 'user' ?
   Miners use your computer's power to earn OCOINs, while users can send OCOINs
   and check their balance."
@@ -125,6 +126,7 @@ let rec repl step state =
          " to all of this)?") in
      (match read_line () |> clean_input with
       | "miner" ->
+         (*
         let pkey = get_pub_key state in
         let () = state.pub_key <- pkey in
         let privkey = get_priv_key state in
@@ -132,36 +134,68 @@ let rec repl step state =
         let m = get_m state in
         let () = state.m <- m in
         let user = User.set_user pkey privkey m in
-        let () = state.user <- user in
-        let () = print_endline "config done" in
-        repl "mine" state
+          *)
+         print_endline "Please enter your key file name:";
+         print_endline "Note: The .key extension will be added automatically.";
+         let name = (read_line ())^".key" in
+         let user = User.get_user name in
+         let () = state.user <- user in
+         let () = print_endline "config done" in
+         repl "mine" state
       | "user" ->
-        let pkey = get_pub_key state in
-        let () = state.pub_key <- pkey in
-        let pkey = get_pub_key state in
-        let () = state.pub_key <- pkey in
-        let privkey = get_priv_key state in
-        let () = state.priv_key <- privkey in
-        let m = get_m state in
-        let () = state.m <- m in
-        let user = User.set_user pkey privkey m in
-        let () = state.user <- user in
-        repl "use" state
+(*
+         let pkey = get_pub_key state in
+         let () = state.pub_key <- pkey in
+         let pkey = get_pub_key state in
+         let () = state.pub_key <- pkey in
+         let privkey = get_priv_key state in
+         let () = state.priv_key <- privkey in
+         let m = get_m state in
+         let () = state.m <- m in
+         let user = User.set_user pkey privkey m in
+ *)
+         print_endline "Please enter your key file name:";
+         print_endline "Note: The .key extension will be added automatically.";
+         let name = (read_line ())^".key" in
+         let user = User.get_user name in
+         let () = state.user <- user in
+         repl "use" state
       | "new" ->
-        let () = new_user_orientation () in repl "signin" state
+         let () = new_user_orientation () in repl "signin" state
       | _ ->
-        let () =
-          print_endline "Sorry, invalid command."
-        in repl step state)
+         let () =
+           print_endline "Sorry, invalid command."
+         in repl step state)
    | "mine" ->
-     (* let () = print_endline "1" in *)
-     let () = (block_thread := Thread.create Bs.mk_server_block (blk_ref,blk_mux,blkchn, blkchn_mux)) in (*TODO can't ues Mine ? *)
+      (* let () = print_endline "1" in *)
+      print_endline "Are you starting a new chain (new) or joining one (join)?";
+      (match (read_line ()) with
+       | "new" ->
+          print_endline "Please enter your IP address";
+          let ip = read_line () in
+          print_endline "Congrats, you have just founded a brand new alt-coin. You will start with 42 oCoins.";
+          (* TODO Make genesis block of 42 *)
+          block_thread := Thread.create Bs.mk_server_block (blk_ref,blk_mux, chain_ref, chain_mux,blkchn, blkchn_mux, ref [ip]);
+          mine_thread := Thread.create User.run_miner (state.user, chain_mux, chain_ref, blk_mux, blk_ref, blkchn, blkchn_mux);
+          repl "mining" state
+       | "join" ->
+          print_endline "Please enter your IP address:";
+          let myip = read_line () in
+          print_endline "Please insert a ip address to join from";
+          let ip = read_line () in
+          let ips = String.split_on_char '\n' (Bc.get_value (ip,"ips")) in
+          ignore (List.map (fun i -> Thread.join (Thread.create post_value (i,"ip",myip,"ips"))) (ip::ips));
+          block_thread := Thread.create Bs.mk_server_block (blk_ref,blk_mux, chain_ref, chain_mux,blkchn, blkchn_mux, ref (ip::ips));
+          mine_thread := Thread.create User.run_miner (state.user, chain_mux, chain_ref, blk_mux, blk_ref, blkchn, blkchn_mux);
+
+          repl "mining" state
+       | _ -> failwith "bad")
+      (*TODO can't ues Mine ? *)
      (* print_endline "2"; *)
      (*let () = (chain_thread := Thread.create Bs.mk_server_chain (chain_ref,chain_mux)) in *)
      (* print_endline "3"; *)
      (*let () = (display_chain_thread := Thread.create *)
-     let () = (mine_thread := Thread.create User.run_miner (state.user, chain_mux, chain_ref, blk_mux, blk_ref, blkchn, blkchn_mux)) in
-     repl "mining" state
+     
    | "mining" ->
      let () = print_endline "You're mining. Please enter 'quit' if you want to quit" in
      (match read_line () |> clean_input with
@@ -179,17 +213,39 @@ let rec repl step state =
      (match read_line () |> clean_input with
       | "balance" -> failwith "unimplemented"
       | "send" ->
-        print_endline "Type in a destination address";
-        let dest = read_line () |> clean_input in
-        print_endline "Type in an amount";
-        let amnt = read_line () |> clean_input |> float_of_string in
-        print_endline "Type a blockchain ip (include the decimal points)";
-        let ip = read_line () |> clean_input in
-        let blk = Crypto.BlockChain.make_block state.pub_key dest amnt state.m in
-        let signed_blk = Crypto.BlockChain.sign_block blk state.pub_key state.priv_key (int_of_string state.m) [] in
-        let jsn = Crypto.BlockChain.json_of_block signed_blk |> to_string in
-        (*post ip jsn;*)
-        repl step state
+         print_endline "Type in the payment file name";
+         print_endline "Note: the extension .to will be added automatically";
+         let name = read_line () |> clean_input in
+         let dest = User.load_payment_file (name^".to") in
+         print_endline "Type in an amount";
+         let amnt = read_line () |> clean_input |> float_of_string in
+         print_endline "Type a blockchain ip (include the decimal points)";
+         let ip = read_line () |> clean_input in
+
+         (*
+        let ipstr = ref "" in
+        let ipm = Mutex.create () in
+          *)
+         
+         let ipstr = Bc.get_value (ip,"ips") in
+         let ips = String.split_on_char '\n' (ipstr) in
+         print_endline "there";
+         print_endline ipstr;
+         (*
+        let ips = [] in
+        let chnstr = ref "" in
+        let chnm = Mutex.create () in
+        Mutex.unlock chnm;
+          *)
+         let chnstr = Bc.get_value (ip,"") in
+         print_endline chnstr;
+         print_endline "wut";
+         print_endline "wa";
+         let chain = BlockChain.blockchain_of_json (Yojson.Basic.from_string (chnstr)) in
+         let blk = User.make_transaction state.user dest amnt chain.chain in
+         let jsn = Crypto.BlockChain.json_of_block blk |> Yojson.to_string in
+         ignore (List.map (fun ip -> Thread.create Bc.post_value (ip,"block",jsn,"")) ips);
+         repl step state
       | _ ->
         let () = print_endline "Sorry, invalid command." in
         repl step state)

@@ -1,26 +1,41 @@
-open Async
 open Cohttp
-open Cohttp_async
+open Cohttp_lwt_unix
+open Lwt
 open Mutex
 
+(*
 
-let get_value (url:string) (v:string ref) (m:Mutex.t) =
-  let _ = Client.get (Uri.of_string ("http://"^url)) >>>
-             (fun (r,b) ->
-               upon (Cohttp_async.Body.to_string b)
-                 (fun b ->
-                   Mutex.lock m;
-                   v := b;
-                   Mutex.unlock m;
-                   shutdown 0)) in
-  Scheduler.go ()
+let f =
+    let uri = Uri.make ~scheme:"http" ~host:"localhost" ~port:8081 ~query:["hi",[s]] () ~path:"chain" in
+    (Client.get  (uri)) >>=
+      (fun (r,b) ->
 
-
-let post_value (url:string) (key:string) (value:string) host =
+        (Cohttp_lwt.Body.to_string b) >|=
+          (fun b ->
+            print_endline b;
+            v := b; b))
+      *)
+    
+   
+let get_value ((url:string),path) =
   let uri =
-    Uri.make ~scheme:"http" ~host:host ~port:8081 ~query:[key,[value]] () in
-  let _ = Client.post (uri) >>> (fun _ -> shutdown 0) in
-  Scheduler.go ()
+    Uri.make ~scheme:"http" ~host:url ~port:8081 ~path:path () in
+  
+  let b = Client.get (uri) >>=
+             (fun (r,b) ->
+               (Cohttp_lwt.Body.to_string b) >|=
+                 (fun b ->
+                   print_endline "hi";
+                   b)) in
+  Lwt_main.run b
+
+
+let post_value ((url:string),(key:string),(value:string),path) =
+  let uri =
+    Uri.make ~scheme:"http" ~host:url ~port:8081 ~query:[key,[value]] ~path:path () in
+  let p = Client.post (uri) >>= (fun (r,b) ->
+      (Cohttp_lwt.Body.to_string b) >|= (fun b -> b)) in
+  Lwt_main.run p
   
     
                         

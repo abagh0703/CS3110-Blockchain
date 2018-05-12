@@ -243,8 +243,8 @@ type user = {pubk: string; privk: string; c: string}
 
 (* [sign_block] let the sender with private key [privk] sign the block
  * [blk] *)
-let sign_block blk key user block_chain =
-  let b_list = List.filter (fun b -> blk.source = user.pubk) block_chain in
+let sign_block blk key pubk block_chain =
+  let b_list = List.filter (fun b -> blk.source = pubk) block_chain in
   let msg = (List.length b_list) + 2 in
   let raisepriv = Cryptokit.RSA.encrypt key (string_of_int msg) in
   (*  let sgn = nonnegmod raisepriv (int_of_string user.c) in *) (*cannot use since raisepriv is hex now*)
@@ -266,20 +266,20 @@ let check_block key blk block_chain =
     then true
     else false
 
-  let make_block source dest amount n = {
-      source = source;
-      dest = dest;
-      amount = amount;
-      time_stamp = int_of_float (Unix.time ());
-      nonce = 0;
-      prev_hash = 0;
-      miner = "";
-      n = n;
-      d = "0";
-      genesis = false;
-      signature = "";
-      msg = "";
-    }
+let make_block source dest amount n = {
+    source = source;
+    dest = dest;
+    amount = amount;
+    time_stamp = int_of_float (Unix.time ());
+    nonce = 0;
+    prev_hash = 0;
+    miner = "";
+    n = n;
+    d = "0";
+    genesis = false;
+    signature = "";
+    msg = "";
+  }
 
 
 end
