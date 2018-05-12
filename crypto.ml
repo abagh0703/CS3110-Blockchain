@@ -1,14 +1,15 @@
 open Yojson.Basic.Util
 open Map
+open Cryptokit
 
 module BlockChain = struct
 
   type hash = int
 
-                    
+
 
   module Chainmap = Map.Make(String)
-               
+
 
 
   type block = {
@@ -41,7 +42,7 @@ module BlockChain = struct
       complexity = 1000000;
     }
 
-  
+
 
   let block_of_json j = {
     prev_hash= j |> member "prev_hash" |> to_int;
@@ -164,20 +165,20 @@ module BlockChain = struct
                       Chainmap.find b.source map else 0. in
        let ntot = srctot -. b.amount in
        let map' = Chainmap.add b.source ntot map in
-       
+
        let mintot = if Chainmap.mem b.miner map then
                       Chainmap.find b.miner map else 0. in
        let nmtot = mintot +. ch.reward in
        let map2 = Chainmap.(map' |> add b.miner nmtot) in
-       
+
        let desttot = if Chainmap.mem b.dest map then
                        Chainmap.find b.dest map else 0. in
        let ndtot = desttot +. b.amount in
        let map3 = Chainmap.(map2 |> add b.dest ndtot) in
 
        check_chain_values {ch with chain=chain'} (Some map3)
-    
-      
+
+
   let rec check_balance (id:string) (acc:float) (ch:blockchain)  =
     match ch.chain with
     | [] -> acc
@@ -188,8 +189,8 @@ module BlockChain = struct
        let a' = minerew +. destrew -. sourcepen in
        check_balance id (acc+.a') {ch with chain=chain'}
 
-       
-    
+
+
   let set_miner (b:block) id =
     {b with miner = id}
 
@@ -212,7 +213,7 @@ module BlockChain = struct
         c + b
       else
         c
-
+          (*
   (* [sign_block] let the sender with private key [privk] sign the block
    * [blk] *)
     let sign_block blk pubk privk c block_chain =
@@ -223,8 +224,8 @@ module BlockChain = struct
       let sign = string_of_int sgn in
       {blk with signature = sign; msg = string_of_int msg}
 
-    
-      
+
+
   (* *)
     let check_block blk block_chain =
       let f_pubk = float_of_string blk.source in
@@ -236,6 +237,34 @@ module BlockChain = struct
       if msg = int_of_string blk.msg
       then true
       else false
+*)
+
+type user = {pubk: string; privk: string; c: string}
+
+(* [sign_block] let the sender with private key [privk] sign the block
+ * [blk] *)
+let sign_block blk key user block_chain =
+  let b_list = List.filter (fun b -> blk.source = user.pubk) block_chain in
+  let msg = (List.length b_list) + 2 in
+  let raisepriv = Cryptokit.RSA.encrypt key (string_of_int msg) in
+  (*  let sgn = nonnegmod raisepriv (int_of_string user.c) in *) (*cannot use since raisepriv is hex now*)
+  (*let sign = string_of_int sgn in*)
+  {blk with signature = raisepriv; msg = string_of_int msg}
+
+(* *)
+let check_block key blk block_chain =
+  (*let f_pubk = float_of_string blk.source in
+  (* get the public key *)
+  let f_sig = float_of_string blk.signature in
+    (* get the signiture *)*)
+  let decryption = Cryptokit.RSA.decrypt key blk.signature in
+  let length_msg = String.length blk.msg in
+  let length_decryp = String.length decryption in
+  let recover = String.sub decryption (length_decryp - 1 -length_msg) length_msg in
+  (* decrypt the message *)
+  if recover = blk.msg
+    then true
+    else false
 
   let make_block source dest amount n = {
       source = source;
