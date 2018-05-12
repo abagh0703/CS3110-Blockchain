@@ -1,16 +1,17 @@
 open Queue
 open Mutex
 open Crypto
-open Rsa
 open Cryptokit
+open Yojson.Basic.Util
+   
 
 
 module User = struct
 
+  let size = 128
+
   type user = {pubk: string; privk: string; c: string}
 
-  let get_user file_name =
-    failwith "unimp"
 
 
 
@@ -74,7 +75,7 @@ module User = struct
 
   (* These functions are so simple even Aram should be able to tell what they do *)
   let new_user () =
-    let key = Cryptokit.RSA.new_key 128 in 
+    let key = Cryptokit.RSA.new_key size in 
     {pubk = key.e; privk = key.d; c = key.n}
 
   let unpack_user (u:user) =
@@ -83,7 +84,36 @@ module User = struct
   let set_user pubk privk c =
     {pubk=pubk; privk=privk; c=c}
 
+  let save_user u name =
+    let j = `Assoc [
+        ("pubk", `String u.pubk);
+        ("privk", `String u.privk);
+        ("c", `String u.c);
+              ] in
+    Yojson.to_file name j
+
+  let make_payment_file u name =
+    let j = `Assoc [
+        ("pubk", `String u.pubk);
+              ] in
+    Yojson.to_file name j
+
+  let load_payment_file name =
+    let j = Yojson.Basic.from_file name in
+    j |> member "pubk" |> to_string
+
+  let get_user name =
+    let j = Yojson.Basic.from_file name in
+    {
+      pubk = j |> member "pubk" |> to_string;
+      privk = j |> member "privk" |> to_string;
+      c = j |> member "c" |> to_string;
+    }
+
   let make_transaction user dest amount chain =
     let block = BlockChain.make_block user.pubk dest amount user.c in
-    BlockChain.sign_block block user.pubk user.privk (int_of_string user.c) chain
+    let k = (Cryptokit.RSA.new_key size) in
+    let key = {k with d=user.privk; n=user.c} in
+    BlockChain.sign_block block key user.pubk chain
+    
 end
