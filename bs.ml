@@ -1,5 +1,5 @@
 (* This file is in the public domain *)
-open Base
+(*open Base*)
 open Cohttp_async
 open Mutex
 open Async_kernel
@@ -67,6 +67,11 @@ let append_block (r, s, m) =
 let start_server_block r (m:Mutex.t) (chnref:Crypto.BlockChain.blockchain ref) chnmux port _ =
   Cohttp_async.Server.create ~on_handler_error:`Raise
     (Async_extra.Tcp.Where_to_listen.of_port port) (fun ~body _ req ->
+      let (uri:Uri.t) = Cohttp.Request.uri req in
+      let msg = Uri.get_query_param uri "hi" in
+      let () = match msg with
+        | Some x -> print_endline x;
+        | _ -> () in
       match req |> Cohttp.Request.meth with
       | `POST ->
         (Body.to_string body) >>= (fun body ->
@@ -78,7 +83,7 @@ let start_server_block r (m:Mutex.t) (chnref:Crypto.BlockChain.blockchain ref) c
             let ch = Crypto.BlockChain.block_of_json js in
             Server.respond_string "good"
           with
-            _ -> Server.respond `OK)
+            _ -> Server.respond_string "bad")
       | `GET ->
          Mutex.lock chnmux;
          let ch = !chnref in
@@ -95,7 +100,7 @@ let mk_server_block (r,(m:Mutex.t), chnref, chnmux) =
   Command.async_spec
     ~summary:"Simple http server that outputs body of POST's"
     Command.Spec.(empty +>
-                  flag "-p" (optional_with_default 8081 int)
+                  flag "-p" (optional_with_default 80 int)
                     ~doc:"int Source port to listen on"
                  ) (start_server_block r m chnref chnmux)
   |> Command.run; ()
