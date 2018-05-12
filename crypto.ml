@@ -178,7 +178,17 @@ module BlockChain = struct
        check_chain_values {ch with chain=chain'} (Some map3)
     
       
+  let rec check_balance (id:string) (acc:float) (ch:blockchain)  =
+    match ch.chain with
+    | [] -> acc
+    | b'::chain' ->
+       let minerew = if b'.miner = id then ch.reward else 0. in
+       let destrew = if b'.dest = id then b'.amount else 0. in
+       let sourcepen = if b'.source = id then b'.amount else 0. in
+       let a' = minerew +. destrew -. sourcepen in
+       check_balance id (acc+.a') {ch with chain=chain'}
 
+       
     
   let set_miner (b:block) id =
     {b with miner = id}
