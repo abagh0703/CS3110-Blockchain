@@ -4,27 +4,28 @@ module BlockChain :
     type hash = int
 
 
-    type block 
-      
+    type block
+
     type blockchain
 
-       
+   (*Initializes an empty blockchain*)
     val empty : blockchain
 
+    (*[make_chain] creates a blockchain based on a string [startid].*)
     val make_chain : string -> blockchain
 
-    (* block_of_json converts json into a block type. Will raise error 
+    (* block_of_json converts json into a block type. Will raise error
      * if the json is invalid
      *)
     val block_of_json : Yojson.Basic.json -> block
 
-    (* block_of_json converts json into a blockchain type. Will raise error 
+    (* block_of_json converts json into a blockchain type. Will raise error
      * if the json is invalid
      *)
     val blockchain_of_json : Yojson.Basic.json -> blockchain
 
     (* json_of_block converts a block into json *)
-    val json_of_block : block -> Yojson.json  
+    val json_of_block : block -> Yojson.json
 
     (* json_of_blockchain converts a blockchain into json *)
     val json_of_blockchain : blockchain -> Yojson.json
@@ -34,7 +35,7 @@ module BlockChain :
      *)
     val block_to_string : block -> string
 
-    (* blockchain_to_string takes a blockchain and returns the string 
+    (* blockchain_to_string takes a blockchain and returns the string
      * of its json representation
      *)
     val block_chain_to_string : blockchain -> string
@@ -44,7 +45,7 @@ module BlockChain :
 
     (* blockchain_printify prints a blockchain *)
     val blockchain_printify : blockchain -> unit
-    
+
     (* hash_block returns a hash of a block object using Hashtbl.has *)
     val hash_block : block -> hash
 
@@ -64,27 +65,36 @@ module BlockChain :
      * true, otherwise returns the chain unmodified and false
      *)
     val add_block : block -> blockchain -> blockchain * bool
-      
-    val check_transaction : block -> blockchain -> bool
-      
-    val check_balance : string -> float -> blockchain -> float
-      
-    val in_chain : block -> blockchain -> bool
-      
-    val set_miner : block -> string -> block
-      
-    val incr_nonce : block -> block
-      
-    val nonnegmod : hash -> hash -> hash
-      
-    val sign_block : block -> Cryptokit.RSA.key -> string -> blockchain -> block
-      
-    val check_block : Cryptokit.RSA.key -> block -> 'a -> bool
-      
-    val make_block : string -> string -> float -> string -> block
 
+    (*Returns true if the transaction is valid, false otherwise*)
+    val check_transaction : block -> blockchain -> bool
+
+    (*Returns the total balance in a blockchain.*)
+    val check_balance : string -> float -> blockchain -> float
+
+    (*Returns true if block is in blockchain. False other wise*)
+    val in_chain : block -> blockchain -> bool
+
+    (*Returns a block containing information about the miner*)
+    val set_miner : block -> string -> block
+
+    (*Returns a block with updated nonce value.*)
+    val incr_nonce : block -> block
+
+    (*Returns a computed nonce value.*)
+    val nonnegmod : hash -> hash -> hash
+
+   (*[sign_block] let the sender with private key [privk] sign the block [blk]*)
+    val sign_block : block -> Cryptokit.RSA.key -> string -> blockchain -> block
+
+    (*Returns  *)
+    val check_block : Cryptokit.RSA.key -> block -> 'a -> bool
+
+    val make_block : string -> string -> float -> string -> block
+    (*[get_amount] returns the value of the block's amount.*)
     val get_amount : block -> float
 
+(*[get_source] returns the value of the block's source.*)
     val get_source : block -> string
-      
+
   end

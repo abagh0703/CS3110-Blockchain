@@ -151,7 +151,6 @@ module BlockChain = struct
     Hashtbl.hash b
 
   let valid_block (b:block) =
-    (* TODO *)
     b.amount >= 0.
 
   let valid_hash (b:block) (blks:block list) =
@@ -255,71 +254,26 @@ module BlockChain = struct
   let incr_nonce (b:block) =
     {b with nonce = b.nonce+1}
 
-
-  (*let sign_block blk priv_key msg =
-    failwith "unimplemented"
-  let check_sig blk =
-    failwith "unimplemnted"*)
-
-
-  (*type user = {pubk: string; privk: string; c: string}
-   *)
-
   let nonnegmod a b =
       let c = a mod b in
       if c < 0 then
         c + b
       else
         c
-          (*
-  (* [sign_block] let the sender with private key [privk] sign the block
-   * [blk] *)
-    let sign_block blk pubk privk c block_chain =
-      let b_list = List.filter (fun b -> blk.source = pubk) block_chain in
-      let msg = (List.length b_list) + 2 in
-      let raisepriv = int_of_float(((float_of_int msg)**(float_of_string privk))) in
-      let sgn = nonnegmod raisepriv c in
-      let sign = string_of_int sgn in
-      {blk with signature = sign; msg = string_of_int msg}
 
-
-
-  (* *)
-    let check_block blk block_chain =
-      let f_pubk = float_of_string blk.source in
-      (* get the public key *)
-      let f_sig = float_of_string blk.signature in
-      (* get the signiture *)
-      let msg = nonnegmod (int_of_float (f_sig**f_pubk)) (int_of_string blk.n) in
-      (* decrypt the message *)
-      if msg = int_of_string blk.msg
-      then true
-      else false
-*)
-
-
-(* [sign_block] let the sender with private key [privk] sign the block
- * [blk] *)
   let sign_block blk key pubk blkchn =
     let block_chain = blkchn.chain in
     let b_list = List.filter (fun b -> blk.source = pubk) block_chain in
     let msg = (List.length b_list) + 2 in
     let raisepriv = Cryptokit.RSA.encrypt key (string_of_int msg) in
-    (*  let sgn = nonnegmod raisepriv (int_of_string user.c) in *) (*cannot use since raisepriv is hex now*)
-    (*let sign = string_of_int sgn in*)
     {blk with signature = raisepriv; msg = string_of_int msg}
 
   (* *)
   let check_block key blk block_chain =
-    (*let f_pubk = float_of_string blk.source in
-  (* get the public key *)
-  let f_sig = float_of_string blk.signature in
-     (* get the signiture *)*)
     let decryption = Cryptokit.RSA.decrypt key blk.signature in
     let length_msg = String.length blk.msg in
     let length_decryp = String.length decryption in
     let recover = String.sub decryption (length_decryp - 1 -length_msg) length_msg in
-    (* decrypt the message *)
     if recover = blk.msg
     then true
     else false
@@ -342,7 +296,7 @@ module BlockChain = struct
   let get_amount blk = blk.amount
 
   let get_source blk = blk.source
-                     
+
 
 
 end
