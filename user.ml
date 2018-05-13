@@ -17,7 +17,7 @@ module User = struct
 
 
   (*Aram do not call this function, you got that? *)
-  let rec mine (mine_mux:Mutex.t) (chain_queue:BlockChain.blockchain list ref) chain block =
+  let rec mine (mine_mux:Mutex.t) (chain_queue:BlockChain.blockchain list ref) chain block ipsr ipm =
     if Mutex.try_lock mine_mux then
       if !chain_queue <> [] then
         let poten_chain::remain_queue = !chain_queue in
@@ -28,49 +28,71 @@ module User = struct
         if BlockChain.is_valid_chain poten_chain && c2 < c1 then
           poten_chain
         else
-          mine mine_mux chain_queue chain block
+          mine mine_mux chain_queue chain block ipsr ipm
       else
         let () = Mutex.unlock mine_mux in
         let up_nonce = BlockChain.incr_nonce block in
         let (chain',added) = BlockChain.add_block up_nonce chain in
         if added then
+          let js = BlockChain.json_of_blockchain chain' in
+          let chs = Yojson.to_string js in
+          Mutex.lock ipm;
+          let ips = !ipsr in
+          Mutex.unlock ipm;
+          ignore (List.map (fun ip -> Thread.join (Thread.create Bc.post_value (ip,"block",chs,""))) ips);
           chain'
         else
-          mine mine_mux chain_queue chain up_nonce
+          mine mine_mux chain_queue chain up_nonce ipsr ipm
     else
       let up_nonce = BlockChain.incr_nonce block in
       let (chain',added) = BlockChain.add_block up_nonce chain in
       if added then
+        let js = BlockChain.json_of_blockchain chain' in
+        let chs = Yojson.to_string js in
+        Mutex.lock ipm;
+        let ips = !ipsr in
+        Mutex.unlock ipm;
+        ignore (List.map (fun ip -> Thread.join (Thread.create Bc.post_value (ip,"block",chs,""))) ips);
         chain'
       else
-        mine mine_mux chain_queue chain up_nonce
+        mine mine_mux chain_queue chain up_nonce ipsr ipm
 
 
   (* This one needs to be in its own thread, should run continuously. ALl of the mutexes, queues, and the blockchain ref must also be available to the server thread. Make sure to mutex protect everything. You need to call this function. DO you understnd Aram *)
-  let rec run_miner ((u:user), mine_mux, (chain_queue:BlockChain.blockchain list ref), request_mux, (request_queue:BlockChain.block list ref), (blockchain:BlockChain.blockchain ref), (chain_mux:Mutex.t)) =
+  let rec run_miner ((u:user), mine_mux, (chain_queue:BlockChain.blockchain list ref), request_mux, (request_queue:BlockChain.block list ref), (blockchain:BlockChain.blockchain ref), (chain_mux:Mutex.t), ipsr, ipm) =
     Thread.delay 0.01;
     if Mutex.try_lock request_mux then
       if [] <> !request_queue then
         let b::remaining = !request_queue in
         request_queue := remaining;
         Mutex.unlock request_mux;
-        if BlockChain.valid_block b then
+        Mutex.lock chain_mux;
+        let chn = !blockchain in
+        Mutex.unlock chain_mux;
+        let money = BlockChain.check_balance (BlockChain.get_source b) 0. chn in
+        if BlockChain.valid_block b && money >= (BlockChain.get_amount b) then
           let b' = BlockChain.set_miner b u.pubk in
           Mutex.lock chain_mux;
           let chain' = !blockchain in
           Mutex.unlock chain_mux;
-          let new_chain = mine mine_mux chain_queue chain' b' in
+          let new_chain = mine mine_mux chain_queue chain' b' ipsr ipm in
           Mutex.lock chain_mux;
           blockchain := new_chain;
           Mutex.unlock chain_mux;
-          run_miner (u, mine_mux, chain_queue, request_mux, request_queue, blockchain, chain_mux)
+          if not (BlockChain.in_chain b' new_chain) then
+            let () = Mutex.lock request_mux in
+            let () = request_queue := b'::!request_queue in
+            let () = Mutex.unlock request_mux in
+            run_miner (u, mine_mux, chain_queue, request_mux, request_queue, blockchain, chain_mux, ipsr, ipm)
+          else
+            run_miner (u, mine_mux, chain_queue, request_mux, request_queue, blockchain, chain_mux, ipsr, ipm)
         else
-          run_miner (u, mine_mux, chain_queue, request_mux, request_queue, blockchain, chain_mux)
+          run_miner (u, mine_mux, chain_queue, request_mux, request_queue, blockchain, chain_mux, ipsr, ipm)
       else
         let () = Mutex.unlock request_mux in
-        run_miner (u, mine_mux, chain_queue, request_mux, request_queue, blockchain, chain_mux)
+        run_miner (u, mine_mux, chain_queue, request_mux, request_queue, blockchain, chain_mux, ipsr, ipm)
     else
-      run_miner (u, mine_mux, chain_queue, request_mux, request_queue, blockchain, chain_mux)
+      run_miner (u, mine_mux, chain_queue, request_mux, request_queue, blockchain, chain_mux, ipsr, ipm)
 
 
   (* These functions are so simple even Aram should be able to tell what they do *)
