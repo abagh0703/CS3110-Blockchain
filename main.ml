@@ -177,8 +177,10 @@ let rec repl step state =
           let ip = read_line () in
           print_endline "Congrats, you have just founded a brand new alt-coin. You will start with 42 oCoins.";
           (* TODO Make genesis block of 42 *)
-          block_thread := Thread.create Bs.mk_server_block (blk_ref,blk_mux, chain_ref, chain_mux,blkchn, blkchn_mux, ref [ip]);
-          mine_thread := Thread.create User.run_miner (state.user, chain_mux, chain_ref, blk_mux, blk_ref, blkchn, blkchn_mux);
+          let ipr = ref [ip] in
+          let ipm = Mutex.create () in
+          block_thread := Thread.create Bs.mk_server_block (blk_ref,blk_mux, chain_ref, chain_mux,blkchn, blkchn_mux, ipr, ipm);
+          mine_thread := Thread.create User.run_miner (state.user, chain_mux, chain_ref, blk_mux, blk_ref, blkchn, blkchn_mux, ipr, ipm);
           repl "mining" state
        | "join" ->
           print_endline "Please enter your IP address:";
@@ -187,8 +189,10 @@ let rec repl step state =
           let ip = read_line () in
           let ips = String.split_on_char '\n' (Bc.get_value (ip,"ips")) in
           ignore (List.map (fun i -> Thread.join (Thread.create post_value (i,"ip",myip,"ips"))) (ip::ips));
-          block_thread := Thread.create Bs.mk_server_block (blk_ref,blk_mux, chain_ref, chain_mux,blkchn, blkchn_mux, ref (ip::ips));
-          mine_thread := Thread.create User.run_miner (state.user, chain_mux, chain_ref, blk_mux, blk_ref, blkchn, blkchn_mux);
+          let ipr = ref (ip::ips) in
+          let ipm = Mutex.create () in
+          block_thread := Thread.create Bs.mk_server_block (blk_ref,blk_mux, chain_ref, chain_mux,blkchn, blkchn_mux, ipr, ipm);
+          mine_thread := Thread.create User.run_miner (state.user, chain_mux, chain_ref, blk_mux, blk_ref, blkchn, blkchn_mux, ipr, ipm);
 
           repl "mining" state
        | _ -> failwith "bad")
@@ -238,8 +242,6 @@ let rec repl step state =
 
          let ipstr = Bc.get_value (ip,"ips") in
          let ips = String.split_on_char '\n' (ipstr) in
-         print_endline "there";
-         print_endline ipstr;
          (*
         let ips = [] in
         let chnstr = ref "" in
@@ -247,13 +249,10 @@ let rec repl step state =
         Mutex.unlock chnm;
           *)
          let chnstr = Bc.get_value (ip,"") in
-         print_endline chnstr;
-         print_endline "wut";
-         print_endline "wa";
          let chain = BlockChain.blockchain_of_json (Yojson.Basic.from_string (chnstr)) in
-         let blk = User.make_transaction state.user dest amnt chain.chain in
+         let blk = User.make_transaction state.user dest amnt chain in
          let jsn = Crypto.BlockChain.json_of_block blk |> Yojson.to_string in
-         ignore (List.map (fun ip -> Thread.create Bc.post_value (ip,"block",jsn,"")) ips);
+         ignore (List.map (fun ip -> Thread.join (Thread.create Bc.post_value (ip,"block",jsn,""))) ips);
          repl step state
       | _ ->
         let () = print_endline "Sorry, invalid command." in

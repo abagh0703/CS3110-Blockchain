@@ -2,6 +2,7 @@ open Yojson.Basic.Util
 open Map
 open Cryptokit
 
+
 module BlockChain = struct
 
   type hash = int
@@ -99,12 +100,41 @@ module BlockChain = struct
     let j = json_of_blockchain block_chain in
     Yojson.to_string j
 
+  let block_printify block =
+    print_endline ("previous block hash: "^string_of_int block.prev_hash);
+    print_endline ("time stamp: "^string_of_int block.time_stamp);
+    print_endline ("source: "^block.source);
+    print_endline ("destination: "^block.dest);
+    print_endline ("signature: "^block.signature);
+    print_endline ("nonce: "^(string_of_int block.nonce));
+    print_endline ("amount: "^(string_of_float block.amount));
+    if block.genesis = true
+    then print_endline "genesis: true"
+    else print_endline "genesis: false";
+    print_endline ("miner: "^block.miner);
+    print_endline ("n: "^block.n);
+    print_endline ("d: "^block.d);
+    print_endline ("message: "^block.msg)
+
+  let rec blockchain_printchain chain count =
+    match chain with
+    | [] -> print_endline "empty chain, no blocks"
+    | h::t -> print_endline ("block: "^(string_of_int count));
+      block_printify h;
+      blockchain_printchain t (count+1)
+
+  let blockchain_printify blockchain =
+    blockchain_printchain blockchain.chain 1;
+    print_endline ("reward: "^(string_of_float blockchain.reward));
+    print_endline ("bits: "^(string_of_int blockchain.bits));
+    print_endline ("complexity: "^(string_of_int blockchain.complexity))
 
   let hash_block (b:block) =
     Hashtbl.hash b
 
   let valid_block (b:block) =
-    true
+    (* TODO *)
+    b.amount >= 0.
 
   let valid_hash (b:block) (blks:block list) =
     match blks with
@@ -189,6 +219,13 @@ module BlockChain = struct
        let a' = minerew +. destrew -. sourcepen in
        check_balance id (acc+.a') {ch with chain=chain'}
 
+  let rec in_chain blk chn =
+    match chn.chain with
+    | [] -> false
+    | b::chain' ->
+       if b.source = blk.source && b.time_stamp = blk.time_stamp then
+         true else in_chain blk {chn with chain = chain'}
+
 
 
   let set_miner (b:block) id =
@@ -239,47 +276,52 @@ module BlockChain = struct
       else false
 *)
 
-type user = {pubk: string; privk: string; c: string}
 
 (* [sign_block] let the sender with private key [privk] sign the block
  * [blk] *)
-let sign_block blk key pubk block_chain =
-  let b_list = List.filter (fun b -> blk.source = pubk) block_chain in
-  let msg = (List.length b_list) + 2 in
-  let raisepriv = Cryptokit.RSA.encrypt key (string_of_int msg) in
-  (*  let sgn = nonnegmod raisepriv (int_of_string user.c) in *) (*cannot use since raisepriv is hex now*)
-  (*let sign = string_of_int sgn in*)
-  {blk with signature = raisepriv; msg = string_of_int msg}
+  let sign_block blk key pubk blkchn =
+    let block_chain = blkchn.chain in
+    let b_list = List.filter (fun b -> blk.source = pubk) block_chain in
+    let msg = (List.length b_list) + 2 in
+    let raisepriv = Cryptokit.RSA.encrypt key (string_of_int msg) in
+    (*  let sgn = nonnegmod raisepriv (int_of_string user.c) in *) (*cannot use since raisepriv is hex now*)
+    (*let sign = string_of_int sgn in*)
+    {blk with signature = raisepriv; msg = string_of_int msg}
 
-(* *)
-let check_block key blk block_chain =
-  (*let f_pubk = float_of_string blk.source in
+  (* *)
+  let check_block key blk block_chain =
+    (*let f_pubk = float_of_string blk.source in
   (* get the public key *)
   let f_sig = float_of_string blk.signature in
-    (* get the signiture *)*)
-  let decryption = Cryptokit.RSA.decrypt key blk.signature in
-  let length_msg = String.length blk.msg in
-  let length_decryp = String.length decryption in
-  let recover = String.sub decryption (length_decryp - 1 -length_msg) length_msg in
-  (* decrypt the message *)
-  if recover = blk.msg
+     (* get the signiture *)*)
+    let decryption = Cryptokit.RSA.decrypt key blk.signature in
+    let length_msg = String.length blk.msg in
+    let length_decryp = String.length decryption in
+    let recover = String.sub decryption (length_decryp - 1 -length_msg) length_msg in
+    (* decrypt the message *)
+    if recover = blk.msg
     then true
     else false
 
-let make_block source dest amount n = {
-    source = source;
-    dest = dest;
-    amount = amount;
-    time_stamp = int_of_float (Unix.time ());
-    nonce = 0;
-    prev_hash = 0;
-    miner = "";
-    n = n;
-    d = "0";
-    genesis = false;
-    signature = "";
-    msg = "";
-  }
+  let make_block source dest amount n = {
+      source = source;
+      dest = dest;
+      amount = amount;
+      time_stamp = int_of_float (Unix.time ());
+      nonce = 0;
+      prev_hash = 0;
+      miner = "";
+      n = n;
+      d = "0";
+      genesis = false;
+      signature = "";
+      msg = "";
+    }
+
+  let get_amount blk = blk.amount
+
+  let get_source blk = blk.source
+                     
 
 
 end
