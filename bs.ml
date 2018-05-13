@@ -12,7 +12,7 @@ open Yojson
    https://github.com/mirage/ocaml-cohttp/blob/master/examples/async/receive_post.ml *)
 (* compile with: $ corebuild bs.native -pkg cohttp.async *)
 
-
+(*Creates a blockchain based of json data.*)
 let append_chain (r, s, m) =
   try
     let js = Yojson.Basic.from_string s in
@@ -23,7 +23,7 @@ let append_chain (r, s, m) =
   with
     _ -> ()
 
-
+(*Adds a block to a given blockchain*)
 let append_block (r, s, m) =
   try
     let js = Yojson.Basic.from_string s in
