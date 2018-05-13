@@ -99,6 +99,34 @@ module BlockChain = struct
     let j = json_of_blockchain block_chain in
     Yojson.to_string j
 
+  let block_printify block =
+    print_endline ("previous block hash: "^string_of_int block.prev_hash);
+    print_endline ("time stamp: "^string_of_int block.time_stamp);
+    print_endline ("source: "^block.source);
+    print_endline ("destination: "^block.dest);
+    print_endline ("signature: "^block.signature);
+    print_endline ("nonce: "^(string_of_int block.nonce));
+    print_endline ("amount: "^(string_of_float block.amount));
+    if block.genesis = true
+    then print_endline "genesis: true"
+    else print_endline "genesis: false";
+    print_endline ("miner: "^block.miner);
+    print_endline ("n: "^block.n);
+    print_endline ("d: "^block.d);
+    print_endline ("message: "^block.msg)
+
+  let rec blockchain_printchain chain count =
+    match chain with
+    | [] -> print_endline "empty chain, no blocks"
+    | h::t -> print_endline ("block: "^(string_of_int count));
+      block_printify h;
+      blockchain_printchain t (count+1)
+
+  let blockchain_printify blockchain =
+    blockchain_printchain blockchain.chain 1;
+    print_endline ("reward: "^(string_of_float blockchain.reward));
+    print_endline ("bits: "^(string_of_int blockchain.bits));
+    print_endline ("complexity: "^(string_of_int blockchain.complexity))
 
   let hash_block (b:block) =
     Hashtbl.hash b
