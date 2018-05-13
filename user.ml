@@ -3,7 +3,7 @@ open Mutex
 open Crypto
 open Cryptokit
 open Yojson.Basic.Util
-   
+
 
 
 module User = struct
@@ -13,7 +13,7 @@ module User = struct
   type user = {pubk: string; privk: string; c: string}
 
 
-
+  let empty = {pubk = ""; privk = ""; c = ""}
 
 
   (*Aram do not call this function, you got that? *)
@@ -57,10 +57,17 @@ module User = struct
       else
         mine mine_mux chain_queue chain up_nonce ipsr ipm
 
-
+  let should_die = ref false
+  let kill_mine_thread () = should_die := true
   (* This one needs to be in its own thread, should run continuously. ALl of the mutexes, queues, and the blockchain ref must also be available to the server thread. Make sure to mutex protect everything. You need to call this function. DO you understnd Aram *)
   let rec run_miner ((u:user), mine_mux, (chain_queue:BlockChain.blockchain list ref), request_mux, (request_queue:BlockChain.block list ref), (blockchain:BlockChain.blockchain ref), (chain_mux:Mutex.t), ipsr, ipm) =
     Thread.delay 0.01;
+    if !should_die then
+      let () = print_endline "dead miner" in
+      let () = Thread.exit () in
+      run_miner (u, mine_mux, chain_queue, request_mux, request_queue, blockchain, chain_mux, ipsr, ipm)
+    else
+    (* if get_miner_fate () = true then let () = print_endline "dead miner" in Thread.exit () else *)
     if Mutex.try_lock request_mux then
       if [] <> !request_queue then
         let b::remaining = !request_queue in
@@ -97,7 +104,7 @@ module User = struct
 
   (* These functions are so simple even Aram should be able to tell what they do *)
   let new_user () =
-    let key = Cryptokit.RSA.new_key size in 
+    let key = Cryptokit.RSA.new_key size in
     {pubk = key.e; privk = key.d; c = key.n}
 
   let unpack_user (u:user) =
@@ -137,5 +144,5 @@ module User = struct
     let k = (Cryptokit.RSA.new_key size) in
     let key = {k with d=user.privk; n=user.c} in
     BlockChain.sign_block block key user.pubk chain
-    
+
 end

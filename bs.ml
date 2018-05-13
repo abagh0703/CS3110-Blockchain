@@ -28,7 +28,7 @@ let append_chain (r, s, m) =
 let start_server_chain r (m:Mutex.t) port _ =
   Cohttp_async.Server.create ~on_handler_error:`Raise
     (Async_extra.Tcp.Where_to_listen.of_port port) (fun ~body _ req ->
-      match req |> Cohttp.Request.meth with
+        match req |> Cohttp.Request.meth with
       | `POST ->
         (Body.to_string body) >>= (fun body ->
           Caml.Printf.eprintf "Body: %s" body;
@@ -65,21 +65,27 @@ let append_block (r, s, m) =
 
 
 
-       
+let should_die = ref false
+let kill_server_block () = should_die := true
 
 let start_server_block r (m:Mutex.t) chnr chnm (chnref:Crypto.BlockChain.blockchain ref) chnmux ips ipm port _ =
   Cohttp_async.Server.create ~on_handler_error:`Raise
     (Async_extra.Tcp.Where_to_listen.of_port port) (fun ~body _ req ->
-      let (uri:Uri.t) = Cohttp.Request.uri req in
+      (* let uri1 = req |> Request.uri |> Uri.to_string in *)
+      (* let () = print_endline "HERE!" in *)
+      (* let () = print_endline uri1 in *)
+
+        let (uri:Uri.t) = Cohttp.Request.uri req in
       (*
       let msg = Uri.get_query_param uri "hi" in
       let () = match msg with
-        | Some x -> print_endline x;
+        | Some x -> print_endline ("X: " ^ x);
         | _ -> () in
        *)
       let pth = Uri.path uri in
       print_endline pth;
       print_endline (string_of_bool (pth = "/ips"));
+      if !should_die then let () = print_endline "dead blocker" in let () = Thread.exit () in Server.respond_string "dead" else
       match (req |> Cohttp.Request.meth) with
       | `POST ->
          print_endline "Is posting";

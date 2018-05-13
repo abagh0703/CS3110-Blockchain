@@ -10,6 +10,9 @@ open Yojson.Basic.Util
 open Cohttp_async
 open Crypto
 open Bc
+open Cohttp_lwt_unix
+open Cohttp
+open Lwt
 (*
 type block = {
       prev_hash:int;
@@ -107,7 +110,6 @@ let get_m state =
 
 
 let mine_thread = ref (Thread.self ())
-let chain_thread = ref (Thread.self ())
 let block_thread = ref (Thread.self ())
 
 
@@ -196,30 +198,35 @@ let rec repl step state =
 
           repl "mining" state
        | _ -> failwith "bad")
-      (*TODO can't ues Mine ? *)
      (* print_endline "2"; *)
      (*let () = (chain_thread := Thread.create Bs.mk_server_chain (chain_ref,chain_mux)) in *)
      (* print_endline "3"; *)
      (*let () = (display_chain_thread := Thread.create *)
-     
+
    | "mining" ->
      let () = print_endline "You're mining. Please enter 'quit' if you want to quit" in
      (match read_line () |> clean_input with
       | "quit" ->
-        let () = Thread.kill !mine_thread in
-        let () = Thread.kill !block_thread in
-        let () = Thread.kill !chain_thread in
-        repl "miner" state
+        (* Kills mine_thread *)
+        let () = User.kill_mine_thread () in
+        let () = Bs.kill_server_block () in
+        (* let () = Thread.kill !block_thread in *)
+        repl "use" state (* TODO what happens here? this is nonsensical *)
       | _ ->
         let () = print_endline "Sorry, invalid command." in
         repl step state)
    | "use" ->
      let () = print_endline "You either type 'balance' to check your balance or
-'send' to send OCOIN to others." in
-     let s = read_line () in
-     print_endline s;
-     (match s with
-      | "balance" -> failwith "unimp"
+     'send' to send OCOIN to others." in
+     (match read_line () |> clean_input with
+      | "balance" ->
+        let () = print_endline "Type a blockchain ip (include the decimal points)" in
+        let ip = read_line () |> clean_input in
+        let chnstr = Bc.get_value (ip,"") in
+        let chain = BlockChain.blockchain_of_json (Yojson.Basic.from_string (chnstr)) in
+        let bal = Crypto.BlockChain.check_balance (state.user.pubk) 0. chain in (* TODO test *)
+        let () = print_endline (string_of_float bal) in
+        repl "use" state
       | "send" ->
          print_endline "Type in the payment file name";
          print_endline "Note: the extension .to will be added automatically";
@@ -234,7 +241,7 @@ let rec repl step state =
         let ipstr = ref "" in
         let ipm = Mutex.create () in
           *)
-         
+
          let ipstr = Bc.get_value (ip,"ips") in
          let ips = String.split_on_char '\n' (ipstr) in
          (*
@@ -252,10 +259,10 @@ let rec repl step state =
       | _ ->
         let () = print_endline "Sorry, invalid command." in
         repl step state)
-   | _ -> failwith "Internal  error.")
+   | _ -> failwith "Internal error.")
 
 
-let () = repl "signin" {pub_key = ""; priv_key = ""; m = ""; user = User.new_user ()}
+let () = repl "signin" {pub_key = ""; priv_key = ""; m = ""; user = User.empty}
 
 (* let point = Thread.create Bs.mk_server (r,m) *)
 
