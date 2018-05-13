@@ -38,7 +38,7 @@ module BlockChain = struct
   let empty:blockchain = {
       chain = [];
       reward = 10.0;
-      bits = 2048;
+      bits = 128;
       complexity = 1000000;
     }
 

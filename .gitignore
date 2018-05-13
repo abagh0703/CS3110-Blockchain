@@ -11,6 +11,8 @@
 *.zip
 log.txt
 gitlog.txt
+floop.to
+floop.key
 
 # ocamlbuild working directory
 _build/
