@@ -45,6 +45,7 @@ let start_server_block r (m:Mutex.t) chnr chnm (chnref:Crypto.BlockChain.blockch
         let (uri:Uri.t) = Cohttp.Request.uri req in
 
       let pth = Uri.path uri in
+
       if !should_die then
         let () = Thread.exit () in
         Server.respond_string "Stopped mining" else

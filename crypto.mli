@@ -4,9 +4,27 @@ module BlockChain :
     type hash = int
 
 
-    type block
+    type block = {
+      prev_hash:hash;
+      time_stamp:int;
+      source:string; (*Public Key*)
+      dest:string;
+      signature:string;
+      nonce:int;
+      amount:float;
+      genesis:bool;
+      miner:string;
+      n:string;
+      d:string;
+      msg:string;
+    }
 
-    type blockchain
+  type blockchain = {
+    chain:(block list);
+    reward:float;
+    bits:int;
+    complexity:int;
+    }
 
    (*Initializes an empty blockchain*)
     val empty : blockchain
@@ -97,4 +115,9 @@ module BlockChain :
 (*[get_source] returns the value of the block's source.*)
     val get_source : block -> string
 
+<<<<<<< HEAD
+=======
+    val set_prev_hash : block -> blockchain -> block
+
+>>>>>>> 3a51789a8749df66b87c4457a3fafd5996abb948
   end

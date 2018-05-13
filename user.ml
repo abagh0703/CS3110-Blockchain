@@ -107,7 +107,8 @@ module User = struct
           Mutex.lock chain_mux;
           let chain' = !blockchain in
           Mutex.unlock chain_mux;
-          let new_chain = mine mine_mux chain_queue chain' b' ipsr ipm in
+          let b'' = BlockChain.set_prev_hash b' chain' in
+          let new_chain = mine mine_mux chain_queue chain' b'' ipsr ipm in
           Mutex.lock chain_mux;
           blockchain := new_chain;
           Mutex.unlock chain_mux;
@@ -175,7 +176,7 @@ module User = struct
   let make_transaction user dest amount chain =
     let block = BlockChain.make_block user.pubk dest amount user.c in
     let k = (Cryptokit.RSA.new_key size) in
-    let key = {k with d=user.privk; n=user.c} in
+    let key = {k with d=user.privk;e=user.privk; n=user.c;size=size} in
     BlockChain.sign_block block key user.pubk chain
 
 end
