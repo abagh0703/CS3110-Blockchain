@@ -175,19 +175,21 @@ let rec repl step state =
        | "new" ->
          print_endline "Please enter your IP address";
          let () =
-          input_until_safe (fun() -> let ip = read_line () in
-          (* TODO Make genesis block of 42 *)
-          let ipr = ref [ip] in
+           input_until_safe (fun() ->
+               let ip = read_line () in
+               let startchn = BlockChain.make_chain state.user.pubk in
+               blkchn := startchn;
+               let ipr = ref [ip] in
           let ipm = Mutex.create () in
                              block_thread := Thread.create Bs.mk_server_block
                              (blk_ref,blk_mux, chain_ref, chain_mux,blkchn,
                              blkchn_mux, ipr, ipm);
-                             mine_thread := Thread.create User.run_miner (state.user, chain_mux, 
+                             mine_thread := Thread.create User.run_miner (state.user, chain_mux,
                                                                           chain_ref, blk_mux, blk_ref, blkchn, blkchn_mux, ipr, ipm)) in
          print_endline "Congrats, you have just founded a brand new alt-coin. You will start with 42 oCoins.";
           repl "mining" state
        | "join" ->
-          print_endline "Please enter your IP address:";
+         let () = input_until_safe (fun () -> print_endline "Please enter your IP address:";
           let myip = read_line () in
           print_endline "Please insert a ip address to join from";
           let ip = read_line () in
@@ -196,7 +198,7 @@ let rec repl step state =
           let ipr = ref (ip::ips) in
           let ipm = Mutex.create () in
           block_thread := Thread.create Bs.mk_server_block (blk_ref,blk_mux, chain_ref, chain_mux,blkchn, blkchn_mux, ipr, ipm);
-          mine_thread := Thread.create User.run_miner (state.user, chain_mux, chain_ref, blk_mux, blk_ref, blkchn, blkchn_mux, ipr, ipm);
+          mine_thread := Thread.create User.run_miner (state.user, chain_mux, chain_ref, blk_mux, blk_ref, blkchn, blkchn_mux, ipr, ipm)) in
           repl "mining" state
        | _ ->
          let () =

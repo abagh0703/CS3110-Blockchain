@@ -43,6 +43,24 @@ module BlockChain = struct
       complexity = 1000000;
     }
 
+  let make_chain startid =
+    let blk =
+      {
+        prev_hash = 0;
+        time_stamp = int_of_float (Unix.time ());
+        source = "";
+        dest = startid;
+        signature = "";
+        nonce = 0;
+        amount = 42.;
+        genesis = true;
+        miner = "";
+        n = "";
+        d = "";
+        msg = "";
+      } in
+    {empty with chain = [blk]}
+
 
 
   let block_of_json j = {
@@ -175,6 +193,7 @@ module BlockChain = struct
   let rec check_transaction (b:block) (ch:blockchain) =
     match (b.amount, ch.chain) with
     | (a,_) when a <= 0. -> true
+    | (_,b::[]) -> false
     | (_,[]) -> false
     | (a,b'::chain') ->
        let minerew = if b'.miner = b.source then ch.reward else 0. in
@@ -188,6 +207,8 @@ module BlockChain = struct
       | None -> Chainmap.empty
       | Some x -> x) in
     match ch.chain with
+    | b::[] ->
+       Chainmap.fold (fun _ d b -> (d >= 0.) && b) map true
     | [] ->
        Chainmap.fold (fun _ d b -> (d >= 0.) && b) map true
     | b::chain' ->
@@ -215,7 +236,7 @@ module BlockChain = struct
     | b'::chain' ->
        let minerew = if b'.miner = id then ch.reward else 0. in
        let destrew = if b'.dest = id then b'.amount else 0. in
-       let sourcepen = if b'.source = id then b'.amount else 0. in
+       let sourcepen = if b'.source = id && not (b'.genesis) then b'.amount else 0. in
        let a' = minerew +. destrew -. sourcepen in
        check_balance id (acc+.a') {ch with chain=chain'}
 

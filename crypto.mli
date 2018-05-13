@@ -11,6 +11,8 @@ module BlockChain :
        
     val empty : blockchain
 
+    val make_chain : string -> blockchain
+
     (* block_of_json converts json into a block type. Will raise error 
      * if the json is invalid
      *)
