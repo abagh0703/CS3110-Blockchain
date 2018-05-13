@@ -13,7 +13,6 @@ let get_value ((url:string),path) =
              (fun (r,b) ->
                (Cohttp_lwt.Body.to_string b) >|=
                  (fun b ->
-                   print_endline "hi";
                    b)) in
   Lwt_main.run b
 
