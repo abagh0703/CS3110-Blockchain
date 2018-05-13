@@ -20,7 +20,10 @@ module User = struct
   let rec mine (mine_mux:Mutex.t) (chain_queue:BlockChain.blockchain list ref) chain block ipsr ipm =
     if Mutex.try_lock mine_mux then
       if !chain_queue <> [] then
-        let poten_chain::remain_queue = !chain_queue in
+        let lst = !chain_queue in
+        match lst with
+        |[] -> failwith "empty list"
+        |poten_chain::remain_queue ->
         chain_queue := remain_queue;
         let () = Mutex.unlock mine_mux in
         let c1 = BlockChain.measure_complexity chain in
@@ -68,8 +71,11 @@ module User = struct
     else
       let lck = Mutex.try_lock mine_mux in
       if lck && !chain_queue <> [] then
-      let () = print_endline "unlocked" in
-        let poten_chain::remain_queue = !chain_queue in
+        let ()  = print_endline "unlocked" in
+        let lst  = !chain_queue in
+        match lst with
+        |[] -> failwith "empty list"
+        | poten_chain::remain_queue->
         chain_queue := remain_queue;
         let () = Mutex.unlock mine_mux in
         Mutex.lock chain_mux;
@@ -82,12 +88,14 @@ module User = struct
                    Mutex.unlock chain_mux in
       run_miner (u, mine_mux, chain_queue, request_mux, request_queue, blockchain, chain_mux, ipsr, ipm)
 
-    (* if get_miner_fate () = true then let () = print_endline "dead miner" in Thread.exit () else *)
     else
       let () = if lck then Mutex.unlock mine_mux else () in
       if Mutex.try_lock request_mux then
       if [] <> !request_queue then
-        let b::remaining = !request_queue in
+        let lst = !request_queue in
+        match lst with
+        |[] -> failwith "empty list"
+        |b::remaining ->
         request_queue := remaining;
         Mutex.unlock request_mux;
         Mutex.lock chain_mux;
@@ -108,7 +116,6 @@ module User = struct
           Mutex.unlock ipm;
           let chainstr = Yojson.to_string (BlockChain.json_of_blockchain new_chain) in
           ignore (List.map (fun ip -> Thread.create Bc.post_value (ip,"chain",chainstr,"")) ips);
-          (*(BlockChain.blockchain_printify new_chain);*)
           if not (BlockChain.in_chain b' new_chain) then
             let () = Mutex.lock request_mux in
             let () = request_queue := b'::!request_queue in
