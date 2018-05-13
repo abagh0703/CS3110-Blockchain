@@ -174,7 +174,9 @@ let rec repl step state =
           print_endline "Please enter your IP address";
           let ip = read_line () in
           print_endline "Congrats, you have just founded a brand new alt-coin. You will start with 42 oCoins.";
-          (* TODO Make genesis block of 42 *)
+          let startchn = BlockChain.make_chain state.user.pubk in
+          blkchn := startchn;
+
           let ipr = ref [ip] in
           let ipm = Mutex.create () in
           block_thread := Thread.create Bs.mk_server_block (blk_ref,blk_mux, chain_ref, chain_mux,blkchn, blkchn_mux, ipr, ipm);
