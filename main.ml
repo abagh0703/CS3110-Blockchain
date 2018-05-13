@@ -75,39 +75,37 @@ type data = {
 let clean_input str =
   str |> String.lowercase_ascii |> String.trim
 
+(* Saves user, but catches error if they enter invalid filename and makes them
+   enter another name until a valid one is entered. Returns the safe name they
+   ended up using. *)
+let rec save_user_safely name u =
+  try
+    let () = User.save_user u (name^".key") in name;
+  with
+  | _ -> let () = print_endline "Invalid name, please try again. Rember not to
+include .key or any illegal characters." in
+    let new_name = read_line() in
+    save_user_safely new_name u
+
+let rec input_until_safe f =
+  try
+    f()
+  with
+  | _ ->
+    let () = print_endline "Invalid input, please try again." in
+    input_until_safe f
 
 let new_user_orientation () =
   let u = User.new_user () in
   print_endline "What would you like to name your new key file:";
   print_endline "Note, the extension .key will be added automatically.";
-  let name = (read_line ()) in
-  User.save_user u (name^".key");
-  User.make_payment_file u (name^".to");
+  let name = (read_line () |> String.trim) in
+  let safe_name = save_user_safely name u in
+  User.make_payment_file u (safe_name^".to");
   print_endline ("Welcome! Your configuration file has been saved to"^name);
   print_endline "Now, would you like to be a 'miner' or 'user' ?
   Miners use your computer's power to earn OCOINs, while users can send OCOINs
   and check their balance."
-
-(* Asks user for private key if they haven't already given it *)
-let get_priv_key state =
-  if state.priv_key = "" then
-  let () = print_endline "Please paste your public key: " in
-  read_line ()
-  else state.priv_key
-
-(* Asks user for public key if they haven't already given it *)
-let get_pub_key state =
-  if state.pub_key = "" then
-  let () = print_endline "Please paste your private key: " in
-  read_line ()
-  else state.pub_key
-
-let get_m state =
-  if state.m = "" then
-  let () = print_endline "Please paste your modulus: " in
-  read_line ()
-  else state.m
-
 
 let mine_thread = ref (Thread.self ())
 let block_thread = ref (Thread.self ())
@@ -123,7 +121,7 @@ let rec repl step state =
   (match step with
    | "signin" ->
      let () = print_endline (
-         "Are you a 'miner' (use your computer's resources to mine for OCOINs),"^
+         "Would you like to be a 'miner' (use your computer's resources to mine for OCOINs),"^
          " 'user' (send OCOINs and check your balance), or 'new' (a new user" ^
          " to all of this)?") in
      (match read_line () |> clean_input with
@@ -139,10 +137,11 @@ let rec repl step state =
           *)
          print_endline "Please enter your key file name:";
          print_endline "Note: The .key extension will be added automatically.";
+         let () = input_until_safe (fun() ->
          let name = (read_line ())^".key" in
          let user = User.get_user name in
          let () = state.user <- user in
-         let () = print_endline "config done" in
+         print_endline "config done") in
          repl "mine" state
       | "user" ->
 (*
@@ -158,9 +157,10 @@ let rec repl step state =
  *)
          print_endline "Please enter your key file name:";
          print_endline "Note: The .key extension will be added automatically.";
+         let () = input_until_safe (fun() ->
          let name = (read_line ())^".key" in
          let user = User.get_user name in
-         let () = state.user <- user in
+         state.user <- user) in
          repl "use" state
       | "new" ->
          let () = new_user_orientation () in repl "signin" state
@@ -173,14 +173,18 @@ let rec repl step state =
       print_endline "Are you starting a new chain (new) or joining one (join)?";
       (match (read_line ()) with
        | "new" ->
-          print_endline "Please enter your IP address";
-          let ip = read_line () in
-          print_endline "Congrats, you have just founded a brand new alt-coin. You will start with 42 oCoins.";
+         print_endline "Please enter your IP address";
+         let () =
+          input_until_safe (fun() -> let ip = read_line () in
           (* TODO Make genesis block of 42 *)
           let ipr = ref [ip] in
           let ipm = Mutex.create () in
-          block_thread := Thread.create Bs.mk_server_block (blk_ref,blk_mux, chain_ref, chain_mux,blkchn, blkchn_mux, ipr, ipm);
-          mine_thread := Thread.create User.run_miner (state.user, chain_mux, chain_ref, blk_mux, blk_ref, blkchn, blkchn_mux, ipr, ipm);
+                             block_thread := Thread.create Bs.mk_server_block
+                             (blk_ref,blk_mux, chain_ref, chain_mux,blkchn,
+                             blkchn_mux, ipr, ipm);
+                             mine_thread := Thread.create User.run_miner (state.user, chain_mux, 
+                                                                          chain_ref, blk_mux, blk_ref, blkchn, blkchn_mux, ipr, ipm)) in
+         print_endline "Congrats, you have just founded a brand new alt-coin. You will start with 42 oCoins.";
           repl "mining" state
        | "join" ->
           print_endline "Please enter your IP address:";
@@ -193,9 +197,11 @@ let rec repl step state =
           let ipm = Mutex.create () in
           block_thread := Thread.create Bs.mk_server_block (blk_ref,blk_mux, chain_ref, chain_mux,blkchn, blkchn_mux, ipr, ipm);
           mine_thread := Thread.create User.run_miner (state.user, chain_mux, chain_ref, blk_mux, blk_ref, blkchn, blkchn_mux, ipr, ipm);
-
           repl "mining" state
-       | _ -> failwith "bad")
+       | _ ->
+         let () =
+           print_endline "Sorry, invalid command."
+         in repl step state)
      (* print_endline "2"; *)
      (*let () = (chain_thread := Thread.create Bs.mk_server_chain (chain_ref,chain_mux)) in *)
      (* print_endline "3"; *)
@@ -208,8 +214,7 @@ let rec repl step state =
         (* Kills mine_thread *)
         let () = User.kill_mine_thread () in
         let () = Bs.kill_server_block () in
-        (* let () = Thread.kill !block_thread in *)
-        repl "use" state (* TODO what happens here? this is nonsensical *)
+        repl "signin" state
       | _ ->
         let () = print_endline "Sorry, invalid command." in
         repl step state)
