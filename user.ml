@@ -77,7 +77,7 @@ module User = struct
         let chn = !blockchain in
         Mutex.unlock chain_mux;
         let money = BlockChain.check_balance (BlockChain.get_source b) 0. chn in
-        if BlockChain.valid_block b && money >= (BlockChain.get_amount b) then
+        if BlockChain.valid_block b && money >= (BlockChain.get_amount b) && not (BlockChain.in_chain b chn) then
           let b' = BlockChain.set_miner b u.pubk in
           Mutex.lock chain_mux;
           let chain' = !blockchain in
@@ -86,6 +86,7 @@ module User = struct
           Mutex.lock chain_mux;
           blockchain := new_chain;
           Mutex.unlock chain_mux;
+          (BlockChain.blockchain_printify new_chain);
           if not (BlockChain.in_chain b' new_chain) then
             let () = Mutex.lock request_mux in
             let () = request_queue := b'::!request_queue in
