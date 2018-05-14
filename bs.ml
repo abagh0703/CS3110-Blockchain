@@ -104,6 +104,7 @@ let start_server_block r (m:Mutex.t) chnr chnm (chnref:Crypto.BlockChain.blockch
             Mutex.lock ipm;
            (match nip with
             | None -> ()
+            | Some "" -> ()
             | Some x -> ips := x::!ips);
            let s = List.fold_left (fun a acc -> a^"\n"^acc) "" !ips in
            Mutex.unlock ipm;
