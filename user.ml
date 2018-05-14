@@ -104,7 +104,10 @@ module User = struct
 
   (* These functions are so simple even Aram should be able to tell what they do *)
   let new_user () =
+    let () = print_endline "Generating new key - this may take a couple minutes" in
     let key = Cryptokit.RSA.new_key size in
+    let () = print_endline ("Key of size " ^ (string_of_int size) ^
+                            " bits generated!") in
     {pubk = key.e; privk = key.d; c = key.n}
 
   let unpack_user (u:user) =
