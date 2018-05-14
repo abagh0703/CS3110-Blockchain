@@ -100,7 +100,8 @@ module User = struct
           Mutex.lock chain_mux;
           let chain' = !blockchain in
           Mutex.unlock chain_mux;
-          let new_chain = mine mine_mux chain_queue chain' b' ipsr ipm in
+          let b'' = BlockChain.set_prev_hash b' chain' in
+          let new_chain = mine mine_mux chain_queue chain' b'' ipsr ipm in
           Mutex.lock chain_mux;
           blockchain := new_chain;
           Mutex.unlock chain_mux;

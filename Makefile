@@ -1,5 +1,5 @@
 test:
-	ocamlbuild -use-ocamlfind -I src main.native && ./main.native
+	ocamlbuild -use-ocamlfind -I src test_file.native && ./test_file.native
 
 repl:
 	ocamlbuild -use-ocamlfind -I src main.native && ./main.native

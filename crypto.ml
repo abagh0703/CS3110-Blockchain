@@ -152,7 +152,7 @@ module BlockChain = struct
 
   let valid_block (b:block) =
     (* TODO *)
-    b.amount >= 0.
+    b.amount >= 0. && not(b.genesis)
 
   let valid_hash (b:block) (blks:block list) =
     match blks with
@@ -161,13 +161,7 @@ module BlockChain = struct
     | [] ->
       b.prev_hash = 0
 
-  let rec is_valid_chain (ch:blockchain) =
-    match (ch.chain) with
-    | b::chain' ->
-      if valid_block b && valid_hash b chain' then
-        is_valid_chain {ch with chain=chain'}
-      else false
-    | [] -> true
+  
 
 
   let rec tail_complexity ch s =
@@ -208,7 +202,12 @@ module BlockChain = struct
       | Some x -> x) in
     match ch.chain with
     | b::[] ->
-       Chainmap.fold (fun _ d b -> (d >= 0.) && b) map true
+       let desttot = if Chainmap.mem b.source map then
+                      Chainmap.find b.source map else 0. in
+       let ntot = desttot +. b.amount in
+       let map' = Chainmap.add b.source ntot map in
+
+       check_chain_values {ch with chain=[]} (Some map')
     | [] ->
        Chainmap.fold (fun _ d b -> (d >= 0.) && b) map true
     | b::chain' ->
@@ -228,6 +227,15 @@ module BlockChain = struct
        let map3 = Chainmap.(map2 |> add b.dest ndtot) in
 
        check_chain_values {ch with chain=chain'} (Some map3)
+
+
+  let rec is_valid_chain (ch:blockchain) =
+    match (ch.chain) with
+    | b::b'::chain' ->
+       if valid_block b && valid_hash b (b'::chain') && check_chain_values ch None then
+        is_valid_chain {ch with chain=b'::chain'}
+      else false
+    | _ -> true
 
 
   let rec check_balance (id:string) (acc:float) (ch:blockchain)  =
@@ -319,6 +327,7 @@ module BlockChain = struct
     let length_msg = String.length blk.msg in
     let length_decryp = String.length decryption in
     let recover = String.sub decryption (length_decryp - 1 -length_msg) length_msg in
+    print_endline decryption;
     (* decrypt the message *)
     if recover = blk.msg
     then true
@@ -342,6 +351,12 @@ module BlockChain = struct
   let get_amount blk = blk.amount
 
   let get_source blk = blk.source
+
+  let set_prev_hash b blckchn =
+    match blckchn.chain with
+    | b'::_ ->
+       {b with prev_hash = hash_block b'}
+    | [] -> b
                      
 
 

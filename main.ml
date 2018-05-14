@@ -293,7 +293,7 @@ let rec repl step state =
          let chain = BlockChain.blockchain_of_json (Yojson.Basic.from_string (chnstr)) in
          let blk = User.make_transaction state.user dest amnt chain in
          let jsn = Crypto.BlockChain.json_of_block blk |> Yojson.to_string in
-         ignore (List.map (fun ip -> Thread.join (Thread.create Bc.post_value (ip,"block",jsn,""))) ips);
+         ignore (List.map (fun ip -> if is_valid_ip ip then Thread.join (Thread.create Bc.post_value (ip,"block",jsn,"")) else ()) ips);
          repl step state
       | _ ->
         let () = print_endline "Sorry, invalid command." in

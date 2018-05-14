@@ -84,7 +84,6 @@ let start_server_block r (m:Mutex.t) chnr chnm (chnref:Crypto.BlockChain.blockch
        *)
       let pth = Uri.path uri in
       print_endline pth;
-      print_endline (string_of_bool (pth = "/ips"));
       if !should_die then let () = print_endline "dead blocker" in let () = Thread.exit () in Server.respond_string "dead" else
       match (req |> Cohttp.Request.meth) with
       | `POST ->
