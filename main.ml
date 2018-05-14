@@ -308,7 +308,8 @@ let rec repl step state =
                                 "coins have been sent to " ^ ip) ) in
         repl step state
       | "view" ->
-        failwith "unimplemnted"
+        let () = failwith "unimplemnted" in
+        repl step state
       | _ ->
         let () = !bad_input_message() in
         repl step state)
