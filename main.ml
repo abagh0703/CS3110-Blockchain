@@ -190,8 +190,8 @@ let rec repl step state =
           print_endline "Please insert a ip address to join from";
           let ip = read_line () in
           let ips = String.split_on_char '\n' (Bc.get_value (ip,"ips")) in
-          ignore (List.map (fun i -> Thread.join (Thread.create post_value (i,"ip",myip,"ips"))) (ip::ips));
-          let ipr = ref (ip::ips) in
+          ignore (List.map (fun i -> Thread.join (Thread.create post_value (i,"ip",myip,"ips"))) (ips));
+          let ipr = ref (myip::ips) in
           let ipm = Mutex.create () in
           block_thread := Thread.create Bs.mk_server_block (blk_ref,blk_mux, chain_ref, chain_mux,blkchn, blkchn_mux, ipr, ipm);
           mine_thread := Thread.create User.run_miner (state.user, chain_mux, chain_ref, blk_mux, blk_ref, blkchn, blkchn_mux, ipr, ipm);
