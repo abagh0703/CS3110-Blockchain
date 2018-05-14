@@ -265,8 +265,8 @@ let rec repl step state =
         let () = !bad_input_message() in
         repl step state)
    | "use" ->
-     let () = print_endline "You either type 'balance' to check your balance or
-     'send' to send OCOIN to others." in
+     let () = print_endline "You either type 'balance' to check your balance,
+     'send' to send OCOIN to others, or 'view' to view the blockchain" in
      (match read_line () |> clean_input with
       | "balance" ->
         let () = input_until_safe (fun () ->
@@ -307,6 +307,8 @@ let rec repl step state =
               in print_endline ((string_of_float amnt)^
                                 "coins have been sent to " ^ ip) ) in
         repl step state
+      | "view" ->
+        failwith "unimplemnted"
       | _ ->
         let () = !bad_input_message() in
         repl step state)
