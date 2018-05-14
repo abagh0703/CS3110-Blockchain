@@ -86,6 +86,11 @@ module User = struct
           Mutex.lock chain_mux;
           blockchain := new_chain;
           Mutex.unlock chain_mux;
+          Mutex.lock ipm;
+          let ips = !ipsr in
+          Mutex.unlock ipm;
+          let chainstr = Yojson.to_string (BlockChain.json_of_blockchain new_chain) in
+          ignore (List.map (fun ip -> Thread.create Bc.post_value (ip,"chain",chainstr,"")) ips);
           (BlockChain.blockchain_printify new_chain);
           if not (BlockChain.in_chain b' new_chain) then
             let () = Mutex.lock request_mux in
