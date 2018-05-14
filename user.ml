@@ -78,7 +78,7 @@ module User = struct
                    let () =  blockchain := poten_chain in
                    Mutex.unlock chain_mux
                  else
-                   Mutex.unlock mine_mux in
+                   Mutex.unlock chain_mux in
       run_miner (u, mine_mux, chain_queue, request_mux, request_queue, blockchain, chain_mux, ipsr, ipm)
 
     (* if get_miner_fate () = true then let () = print_endline "dead miner" in Thread.exit () else *)
