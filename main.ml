@@ -229,6 +229,7 @@ let rec repl step state =
           ignore (List.map (fun i -> Thread.join (Thread.create post_value (i,"ip",myip,"ips"))) (ips));
           let ipr = ref (myip::ips) in
           let ipm = Mutex.create () in
+          blkchn := BlockChain.blockchain_of_json (Yojson.Basic.from_string (get_value (ip,"")));
           block_thread := Thread.create Bs.mk_server_block (blk_ref,blk_mux, chain_ref, chain_mux,blkchn, blkchn_mux, ipr, ipm);
           mine_thread := Thread.create User.run_miner (state.user, chain_mux, chain_ref, blk_mux, blk_ref, blkchn, blkchn_mux, ipr, ipm)) in
           repl "mining" state
