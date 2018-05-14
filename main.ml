@@ -94,7 +94,7 @@ let rec input_until_safe f =
     f()
   with
   | Bad_IP -> let () = print_endline "IPs must be of the format XXX.X[X][X].X
-[X][X].X[X][X][:XXX], where X is an integer. Pleas try again." in
+[X][X].X[X][X][:XXX], where X is an integer. Please try again." in
     input_until_safe f
   | _ ->
     let () = print_endline "Invalid input, please try again." in
