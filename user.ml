@@ -66,7 +66,9 @@ module User = struct
       let () = print_endline "dead miner" in
       let () = Thread.exit () in
       run_miner (u, mine_mux, chain_queue, request_mux, request_queue, blockchain, chain_mux, ipsr, ipm)
-    else if Mutex.try_lock mine_mux && !chain_queue <> [] then
+    else
+      let lck = Mutex.try_lock mine_mux in
+      if lck && !chain_queue <> [] then
       let () = print_endline "unlocked" in
         let poten_chain::remain_queue = !chain_queue in
         chain_queue := remain_queue;
@@ -83,7 +85,7 @@ module User = struct
 
     (* if get_miner_fate () = true then let () = print_endline "dead miner" in Thread.exit () else *)
     else
-      let () = Mutex.unlock mine_mux in
+      let () = if lck then Mutex.unlock mine_mux else () in
       if Mutex.try_lock request_mux then
       if [] <> !request_queue then
         let b::remaining = !request_queue in
