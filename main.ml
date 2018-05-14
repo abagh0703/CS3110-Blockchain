@@ -49,21 +49,21 @@ let blkchn_mux = Mutex.create ()
 
 (* POST example: https://github.com/mirage/ocaml-cohttp *)
 (* open Lwt
-open Cohttp
-open Cohttp_lwt_unix
+   open Cohttp
+   open Cohttp_lwt_unix
 
-let body =
-  Client.get (Uri.of_string "https://www.reddit.com/") >>= fun (resp, body) ->
-  let code = resp |> Response.status |> Code.code_of_status in
-  Printf.printf "Response code: %d\n" code;
-  Printf.printf "Headers: %s\n" (resp |> Response.headers |> Header.to_string);
-  body |> Cohttp_lwt.Body.to_string >|= fun body ->
-  Printf.printf "Body of length: %d\n" (String.length body);
-  body
+   let body =
+   Client.get (Uri.of_string "https://www.reddit.com/") >>= fun (resp, body) ->
+   let code = resp |> Response.status |> Code.code_of_status in
+   Printf.printf "Response code: %d\n" code;
+   Printf.printf "Headers: %s\n" (resp |> Response.headers |> Header.to_string);
+   body |> Cohttp_lwt.Body.to_string >|= fun body ->
+   Printf.printf "Body of length: %d\n" (String.length body);
+   body
 
-let () =
-  let body = Lwt_main.run body in
-  print_endline ("Received body\n" ^ body) *)
+   let () =
+   let body = Lwt_main.run body in
+   print_endline ("Received body\n" ^ body) *)
 
 type data = {
   mutable pub_key : string;
@@ -119,10 +119,11 @@ let block_thread = ref (Thread.self ())
 
 let () = print_endline "Welcome to OCHAIN!"
 
-let bad_input_message = ref (fun () -> print_endline "Sorry, invalid command. Please try again.")
+let bad_input_message = ref (fun () -> print_endline "Sorry, invalid command.
+Please try again.")
 
 (* Checks if a string is made of 1 or more numbers and only numbers.
-Ignores any colons, since those are allowed in ips.*)
+   Ignores any colons, since those are allowed in ips.*)
 let rec is_nums s =
   Str.string_match (Str.regexp "[0-9]+$") s 0
 
@@ -137,22 +138,22 @@ let rec all_nums (s:string list) =
 let is_valid_ip ip =
   let parts = Str.split (Str.regexp "[^0-9]+") ip in
   let limit =
-  (try
-      let () = ignore (String.index ip ':') in
-    5
-  with
-  | _ -> 4)
+    (try
+       let () = ignore (String.index ip ':') in
+       5
+     with
+     | _ -> 4)
   in if List.length parts <> limit then false else
-  all_nums parts
+    all_nums parts
 
 
 let rec repl step state =
   (match step with
    | "signin" ->
      let () = print_endline (
-         "Would you like to be a 'miner' (use your computer's resources to mine for OCOINs),"^
-         " 'user' (send OCOINs and check your balance), or 'new' (a new user" ^
-         " to all of this)?") in
+         "Would you like to be a 'miner' (use your computer's resources to mine
+          for OCOINs),"^ " 'user' (send OCOINs and check your balance), or 'new'
+          (a new user" ^ " to all of this)?") in
      (match read_line () |> clean_input with
       | "miner" ->
          (*
@@ -164,14 +165,14 @@ let rec repl step state =
         let () = state.m <- m in
         let user = User.set_user pkey privkey m in
           *)
-         print_endline "Please enter your key file name:";
-         print_endline "Note: The .key extension will be added automatically.";
-         let () = input_until_safe (fun() ->
-         let name = (read_line ())^".key" in
-         let user = User.get_user name in
-         let () = state.user <- user in
-         print_endline "config done") in
-         repl "mine" state
+        print_endline "Please enter your key file name:";
+        print_endline "Note: The .key extension will be added automatically.";
+        let () = input_until_safe (fun() ->
+            let name = (read_line ())^".key" in
+            let user = User.get_user name in
+            let () = state.user <- user in
+            print_endline "config done") in
+        repl "mine" state
       | "user" ->
 (*
          let pkey = get_pub_key state in
@@ -184,65 +185,71 @@ let rec repl step state =
          let () = state.m <- m in
          let user = User.set_user pkey privkey m in
  *)
-         print_endline "Please enter your key file name:";
-         print_endline "Note: The .key extension will be added automatically.";
-         let () = input_until_safe (fun() ->
-         let name = (read_line ())^".key" in
-         let user = User.get_user name in
-         state.user <- user) in
-         repl "use" state
+        print_endline "Please enter your key file name:";
+        print_endline "Note: The .key extension will be added automatically.";
+        let () = input_until_safe (fun() ->
+            let name = (read_line ())^".key" in
+            let user = User.get_user name in
+            state.user <- user) in
+        repl "use" state
       | "new" ->
-         let () = new_user_orientation () in repl "signin" state
+        let () = new_user_orientation () in repl "signin" state
       | _ ->
-         let () =
-           !bad_input_message()
-         in repl step state)
+        let () =
+          !bad_input_message()
+        in repl step state)
    | "mine" ->
-      (* let () = print_endline "1" in *)
-      print_endline "Are you starting a new chain (new) or joining one (join)?";
-      (match (read_line ()) with
-       | "new" ->
-         print_endline "Please enter your IP address";
-         let () =
-           input_until_safe (fun() ->
-               let ip = read_line () in
-               if is_valid_ip ip = false then raise Bad_IP else
-               let startchn = BlockChain.make_chain state.user.pubk in
-               blkchn := startchn;
-               let ipr = ref [ip] in
-          let ipm = Mutex.create () in
-                             block_thread := Thread.create Bs.mk_server_block
-                             (blk_ref,blk_mux, chain_ref, chain_mux,blkchn,
-                             blkchn_mux, ipr, ipm);
-                             mine_thread := Thread.create User.run_miner (state.user, chain_mux,
-                                                                          chain_ref, blk_mux, blk_ref, blkchn, blkchn_mux, ipr, ipm)) in
-         print_endline "Congrats, you have just founded a brand new alt-coin. You will start with 42 oCoins.";
-          repl "mining" state
-       | "join" ->
-         let () = input_until_safe (fun () -> print_endline "Please enter your IP address:";
-         let myip = read_line () in
-         if is_valid_ip myip = false then raise Bad_IP else
-          print_endline "Please insert a ip address to join from";
-          let ip = read_line () in
-          if is_valid_ip ip = false then raise Bad_IP else
-          let ips = String.split_on_char '\n' (Bc.get_value (ip,"ips")) in
-          ignore (List.map (fun i -> Thread.join (Thread.create post_value (i,"ip",myip,"ips"))) (ip::ips));
-          let ipr = ref (ip::ips) in
-          let ipm = Mutex.create () in
-          block_thread := Thread.create Bs.mk_server_block (blk_ref,blk_mux, chain_ref, chain_mux,blkchn, blkchn_mux, ipr, ipm);
-          mine_thread := Thread.create User.run_miner (state.user, chain_mux, chain_ref, blk_mux, blk_ref, blkchn, blkchn_mux, ipr, ipm)) in
-          repl "mining" state
-       | _ ->
-         let () =
-           !bad_input_message()
-         in repl step state)
-     (* print_endline "2"; *)
-     (*let () = (chain_thread := Thread.create Bs.mk_server_chain (chain_ref,chain_mux)) in *)
-     (* print_endline "3"; *)
-     (*let () = (display_chain_thread := Thread.create *)
+     (* let () = print_endline "1" in *)
+     print_endline "Are you starting a new chain (new) or joining one (join)?";
+     (match (read_line ()) with
+      | "new" ->
+        print_endline "Please enter your IP address";
+        let () =
+          input_until_safe (fun() ->
+              let ip = read_line () in
+              if is_valid_ip ip = false then raise Bad_IP else
+                let startchn = BlockChain.make_chain state.user.pubk in
+                blkchn := startchn;
+                let ipr = ref [ip] in
+                let ipm = Mutex.create () in
+                block_thread := Thread.create Bs.mk_server_block
+                    (blk_ref,blk_mux, chain_ref, chain_mux,blkchn,
+                     blkchn_mux, ipr, ipm);
+                mine_thread := Thread.create User.run_miner (state.user,
+                chain_mux, chain_ref, blk_mux, blk_ref, blkchn, blkchn_mux,
+                ipr, ipm)) in
+        print_endline "Congrats, you have just founded a brand new alt-coin.
+        You will start with 42 oCoins.";
+        repl "mining" state
+      | "join" ->
+        let () = input_until_safe
+            (fun () -> print_endline "Please enter your IP address:";
+              let myip = read_line () in
+              if is_valid_ip myip = false then raise Bad_IP else
+                print_endline "Please insert a ip address to join from";
+              let ip = read_line () in
+              if is_valid_ip ip = false then raise Bad_IP else
+                let ips = String.split_on_char '\n' (Bc.get_value (ip,"ips")) in
+                ignore (List.map (
+                    fun i -> Thread.join (Thread.create post_value
+                                            (i,"ip",myip,"ips"))) (ip::ips));
+                let ipr = ref (ip::ips) in
+                let ipm = Mutex.create () in
+                block_thread := Thread.create Bs.mk_server_block (blk_ref,
+                blk_mux, chain_ref, chain_mux,blkchn, blkchn_mux, ipr, ipm);
+                mine_thread := Thread.create User.run_miner (state.user,
+                chain_mux, chain_ref, blk_mux, blk_ref, blkchn, blkchn_mux, ipr,
+                                                             ipm)) in
+        repl "mining" state
+      | _ ->
+        let () =
+          !bad_input_message()
+        in repl step state)
+
 
    | "mining" ->
-     let () = print_endline "You're mining. Please enter 'quit' if you want to quit" in
+     let () = print_endline "You're mining. Please enter 'quit' if you want to
+      quit" in
      (match read_line () |> clean_input with
       | "quit" ->
         (* Kills mine_thread *)
@@ -250,54 +257,55 @@ let rec repl step state =
         let () = Bs.kill_server_block () in
         repl "signin" state
       | _ ->
-        let () = print_endline "Sorry, invalid command." in
+        let () = !bad_input_message() in
         repl step state)
    | "use" ->
      let () = print_endline "You either type 'balance' to check your balance or
      'send' to send OCOIN to others." in
      (match read_line () |> clean_input with
       | "balance" ->
-        let () = print_endline "Type a blockchain ip (include the decimal points)" in
-        let ip = read_line () |> clean_input in
-        if is_valid_ip ip = false then raise Bad_IP else
-        let chnstr = Bc.get_value (ip,"") in
-        let chain = BlockChain.blockchain_of_json (Yojson.Basic.from_string (chnstr)) in
-        let bal = Crypto.BlockChain.check_balance (state.user.pubk) 0. chain in (* TODO test *)
-        let () = print_endline (string_of_float bal) in
+        let () = input_until_safe (fun () ->
+            let () = print_endline "Type a blockchain ip (include the decimal
+              points)" in
+            let ip = read_line () |> clean_input in
+            if is_valid_ip ip = false then raise Bad_IP else
+              let chnstr = Bc.get_value (ip,"") in
+              let chain = BlockChain.blockchain_of_json
+                  (Yojson.Basic.from_string (chnstr)) in
+              let bal = Crypto.BlockChain.check_balance (state.user.pubk) 0.
+                  chain in
+              print_endline ("The balance at ip " ^ ip ^ " is " ^
+                  (string_of_float bal))) in
         repl "use" state
       | "send" ->
-         print_endline "Type in the payment file name";
-         print_endline "Note: the extension .to will be added automatically";
-         let name = read_line () |> clean_input in
-         let dest = User.load_payment_file (name^".to") in
-         print_endline "Type in an amount";
-         let amnt = read_line () |> clean_input |> float_of_string in
-         print_endline "Type a blockchain ip (include the decimal points)";
-         let ip = read_line () |> clean_input in
-         if is_valid_ip ip = false then raise Bad_IP else
-         (*
-        let ipstr = ref "" in
-        let ipm = Mutex.create () in
-          *)
-
-         let ipstr = Bc.get_value (ip,"ips") in
-         let ips = String.split_on_char '\n' (ipstr) in
-         (*
-        let ips = [] in
-        let chnstr = ref "" in
-        let chnm = Mutex.create () in
-        Mutex.unlock chnm;
-          *)
-         let chnstr = Bc.get_value (ip,"") in
-         let chain = BlockChain.blockchain_of_json (Yojson.Basic.from_string (chnstr)) in
-         let blk = User.make_transaction state.user dest amnt chain in
-         let jsn = Crypto.BlockChain.json_of_block blk |> Yojson.to_string in
-         ignore (List.map (fun ip -> Thread.join (Thread.create Bc.post_value (ip,"block",jsn,""))) ips);
-         repl step state
+        let () = input_until_safe (fun () ->
+            print_endline "Type in the payment file name";
+            print_endline "Note: the extension .to will be added automatically";
+            let name = read_line () |> clean_input in
+            let dest = User.load_payment_file (name^".to") in
+            print_endline "Type in an amount";
+            let amnt = read_line () |> clean_input |> float_of_string in
+            print_endline "Type a blockchain ip (include the decimal points)";
+            let ip = read_line () |> clean_input in
+            if is_valid_ip ip = false then raise Bad_IP else
+              let ipstr = Bc.get_value (ip,"ips") in
+              let ips = String.split_on_char '\n' (ipstr) in
+              let chnstr = Bc.get_value (ip,"") in
+              let chain = BlockChain.blockchain_of_json
+                  (Yojson.Basic.from_string (chnstr)) in
+              let blk = User.make_transaction state.user dest amnt chain in
+              let jsn = Crypto.BlockChain.json_of_block blk |>
+                        Yojson.to_string in
+              let () = ignore (List.map (
+                  fun ip -> Thread.join (Thread.create Bc.post_value
+                                           (ip,"block",jsn,""))) ips)
+              in print_endline ((string_of_float amnt)^
+                                "coins have been sent to " ^ ip) ) in
+        repl step state
       | _ ->
-        let () = print_endline "Sorry, invalid command." in
+        let () = !bad_input_message() in
         repl step state)
-   | _ -> failwith "Internal error.")
+   | _ -> failwith "Congrats, you've found a bug! Something's broken in repl.")
 
 
 let () = repl "signin" {pub_key = ""; priv_key = ""; m = ""; user = User.empty}
@@ -305,11 +313,11 @@ let () = repl "signin" {pub_key = ""; priv_key = ""; m = ""; user = User.empty}
 (* let point = Thread.create Bs.mk_server (r,m) *)
 
 (* let rec f r m =
-  Thread.delay 0.1;
-  Mutex.lock m;
-  let c = List.hd (!r) in
-  Mutex.unlock m;
-  print_endline (c);
-  if c = "death" then () else f r m *)
+   Thread.delay 0.1;
+   Mutex.lock m;
+   let c = List.hd (!r) in
+   Mutex.unlock m;
+   print_endline (c);
+   if c = "death" then () else f r m *)
 
 (* let () = f r m *)

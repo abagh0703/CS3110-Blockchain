@@ -63,7 +63,6 @@ module User = struct
   let rec run_miner ((u:user), mine_mux, (chain_queue:BlockChain.blockchain list ref), request_mux, (request_queue:BlockChain.block list ref), (blockchain:BlockChain.blockchain ref), (chain_mux:Mutex.t), ipsr, ipm) =
     Thread.delay 0.01;
     if !should_die then
-      let () = print_endline "dead miner" in
       let () = Thread.exit () in
       run_miner (u, mine_mux, chain_queue, request_mux, request_queue, blockchain, chain_mux, ipsr, ipm)
     else
