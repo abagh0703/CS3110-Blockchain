@@ -94,7 +94,7 @@ let rec input_until_safe f =
     f()
   with
   | Bad_IP -> let () = print_endline "IPs must be of the format XXX.X[X][X].X
-[X][X].X[X][X][:XXX], where X is an integer. Pleas try again." in
+[X][X].X[X][X][:XXX], where X is an integer. Please try again." in
     input_until_safe f
   | _ ->
     let () = print_endline "Invalid input, please try again." in
@@ -199,53 +199,58 @@ let rec repl step state =
           !bad_input_message()
         in repl step state)
    | "mine" ->
-     (* let () = print_endline "1" in *)
-     print_endline "Are you starting a new chain (new) or joining one (join)?";
-     (match (read_line ()) with
-      | "new" ->
-        print_endline "Please enter your IP address";
-        let () =
-          input_until_safe (fun() ->
-              let ip = read_line () in
-              if is_valid_ip ip = false then raise Bad_IP else
-                let startchn = BlockChain.make_chain state.user.pubk in
-                blkchn := startchn;
-                let ipr = ref [ip] in
-                let ipm = Mutex.create () in
-                block_thread := Thread.create Bs.mk_server_block
-                    (blk_ref,blk_mux, chain_ref, chain_mux,blkchn,
-                     blkchn_mux, ipr, ipm);
-                mine_thread := Thread.create User.run_miner (state.user,
-                chain_mux, chain_ref, blk_mux, blk_ref, blkchn, blkchn_mux,
-                ipr, ipm)) in
-        print_endline "Congrats, you have just founded a brand new alt-coin.
-        You will start with 42 oCoins.";
-        repl "mining" state
-      | "join" ->
-        let () = input_until_safe
-            (fun () -> print_endline "Please enter your IP address:";
+      (* let () = print_endline "1" in *)
+      print_endline "Are you starting a new chain (new) or joining one (join)?";
+      (match (read_line ()) with
+       | "new" ->
+         print_endline "Please enter your IP address";
+         let () =
+           input_until_safe (fun() ->
+               let ip = read_line () in
+               if is_valid_ip ip = false then raise Bad_IP else
+               let startchn = BlockChain.make_chain state.user.pubk in
+               blkchn := startchn;
+               let ipr = ref [ip] in
+          let ipm = Mutex.create () in
+                             block_thread := Thread.create Bs.mk_server_block
+                             (blk_ref,blk_mux, chain_ref, chain_mux,blkchn,
+                             blkchn_mux, ipr, ipm);
+                             mine_thread := Thread.create User.run_miner
+                                 (state.user, chain_mux, chain_ref, blk_mux,
+                                  blk_ref, blkchn, blkchn_mux, ipr, ipm)) in
+         print_endline "Congrats, you have just founded a brand new alt-coin.
+                        You will start with 42 oCoins.";
+          repl "mining" state
+       | "join" ->
+         let () = input_until_safe (
+             fun () ->
+              print_endline "Please enter your IP address:";
               let myip = read_line () in
               if is_valid_ip myip = false then raise Bad_IP else
-                print_endline "Please insert a ip address to join from";
+              print_endline "Please insert a ip address to join from";
               let ip = read_line () in
               if is_valid_ip ip = false then raise Bad_IP else
-                let ips = String.split_on_char '\n' (Bc.get_value (ip,"ips")) in
-                ignore (List.map (
-                    fun i -> Thread.join (Thread.create post_value
-                                            (i,"ip",myip,"ips"))) (ip::ips));
-                let ipr = ref (ip::ips) in
-                let ipm = Mutex.create () in
-                block_thread := Thread.create Bs.mk_server_block (blk_ref,
-                blk_mux, chain_ref, chain_mux,blkchn, blkchn_mux, ipr, ipm);
-                mine_thread := Thread.create User.run_miner (state.user,
-                chain_mux, chain_ref, blk_mux, blk_ref, blkchn, blkchn_mux, ipr,
-                                                             ipm)) in
-        repl "mining" state
-      | _ ->
-        let () =
-          !bad_input_message()
-        in repl step state)
-
+              let ips = String.split_on_char '\n' (Bc.get_value (ip,"ips")) in
+              ignore (List.map (fun i -> Thread.join (Thread.create post_value
+                     (i,"ip",myip,"ips"))) (ips));
+              let ipr = ref (myip::ips) in
+              let ipm = Mutex.create () in
+              blkchn := BlockChain.blockchain_of_json (Yojson.Basic.from_string
+                              (get_value (ip,"")));
+              block_thread := Thread.create Bs.mk_server_block (blk_ref,blk_mux,
+                              chain_ref, chain_mux,blkchn, blkchn_mux, ipr, ipm);
+              mine_thread := Thread.create User.run_miner (state.user, chain_mux,
+                             chain_ref, blk_mux, blk_ref, blkchn, blkchn_mux,
+                             ipr, ipm)) in
+          repl "mining" state
+       | _ ->
+         let () =
+           !bad_input_message()
+         in repl step state)
+     (* print_endline "2"; *)
+     (*let () = (chain_thread := Thread.create Bs.mk_server_chain (chain_ref,chain_mux)) in *)
+     (* print_endline "3"; *)
+     (*let () = (display_chain_thread := Thread.create *)
 
    | "mining" ->
      let () = print_endline "You're mining. Please enter 'quit' if you want to
