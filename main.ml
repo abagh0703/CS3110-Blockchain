@@ -72,6 +72,8 @@ type data = {
   mutable user : User.user;
 }
 
+exception Bad_IP
+
 let clean_input str =
   str |> String.lowercase_ascii |> String.trim
 
@@ -91,6 +93,9 @@ let rec input_until_safe f =
   try
     f()
   with
+  | Bad_IP -> let () = print_endline "IPs must be of the format XXX.X[X][X].X
+[X][X].X[X][X][:XXX], where X is an integer. Pleas try again." in
+    input_until_safe f
   | _ ->
     let () = print_endline "Invalid input, please try again." in
     input_until_safe f
@@ -113,8 +118,32 @@ let block_thread = ref (Thread.self ())
 
 
 let () = print_endline "Welcome to OCHAIN!"
-(* TODO add 2nd paramter for possible options to simplify _ condition *)
 
+let bad_input_message = ref (fun () -> print_endline "Sorry, invalid command. Please try again.")
+
+(* Checks if a string is made of 1 or more numbers and only numbers.
+Ignores any colons, since those are allowed in ips.*)
+let rec is_nums s =
+  Str.string_match (Str.regexp "[0-9]+$") s 0
+
+let rec all_nums (s:string list) =
+  match s with
+  | [] -> true
+  | h::t -> if is_nums h then all_nums t
+    else false
+
+(* Since regex splits on ':', make limit 5 if it has a colon and 4 if it
+   doesn't. *)
+let is_valid_ip ip =
+  let parts = Str.split (Str.regexp "[^0-9]+") ip in
+  let limit =
+  (try
+      let () = ignore (String.index ip ':') in
+    5
+  with
+  | _ -> 4)
+  in if List.length parts <> limit then false else
+  all_nums parts
 
 
 let rec repl step state =
@@ -166,7 +195,7 @@ let rec repl step state =
          let () = new_user_orientation () in repl "signin" state
       | _ ->
          let () =
-           print_endline "Sorry, invalid command."
+           !bad_input_message()
          in repl step state)
    | "mine" ->
       (* let () = print_endline "1" in *)
@@ -177,6 +206,7 @@ let rec repl step state =
          let () =
            input_until_safe (fun() ->
                let ip = read_line () in
+               if is_valid_ip ip = false then raise Bad_IP else
                let startchn = BlockChain.make_chain state.user.pubk in
                blkchn := startchn;
                let ipr = ref [ip] in
@@ -190,9 +220,11 @@ let rec repl step state =
           repl "mining" state
        | "join" ->
          let () = input_until_safe (fun () -> print_endline "Please enter your IP address:";
-          let myip = read_line () in
+         let myip = read_line () in
+         if is_valid_ip myip = false then raise Bad_IP else
           print_endline "Please insert a ip address to join from";
           let ip = read_line () in
+          if is_valid_ip ip = false then raise Bad_IP else
           let ips = String.split_on_char '\n' (Bc.get_value (ip,"ips")) in
           ignore (List.map (fun i -> Thread.join (Thread.create post_value (i,"ip",myip,"ips"))) (ip::ips));
           let ipr = ref (ip::ips) in
@@ -202,7 +234,7 @@ let rec repl step state =
           repl "mining" state
        | _ ->
          let () =
-           print_endline "Sorry, invalid command."
+           !bad_input_message()
          in repl step state)
      (* print_endline "2"; *)
      (*let () = (chain_thread := Thread.create Bs.mk_server_chain (chain_ref,chain_mux)) in *)
@@ -227,6 +259,7 @@ let rec repl step state =
       | "balance" ->
         let () = print_endline "Type a blockchain ip (include the decimal points)" in
         let ip = read_line () |> clean_input in
+        if is_valid_ip ip = false then raise Bad_IP else
         let chnstr = Bc.get_value (ip,"") in
         let chain = BlockChain.blockchain_of_json (Yojson.Basic.from_string (chnstr)) in
         let bal = Crypto.BlockChain.check_balance (state.user.pubk) 0. chain in (* TODO test *)
@@ -241,7 +274,7 @@ let rec repl step state =
          let amnt = read_line () |> clean_input |> float_of_string in
          print_endline "Type a blockchain ip (include the decimal points)";
          let ip = read_line () |> clean_input in
-
+         if is_valid_ip ip = false then raise Bad_IP else
          (*
         let ipstr = ref "" in
         let ipm = Mutex.create () in
