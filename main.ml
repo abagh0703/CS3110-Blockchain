@@ -308,7 +308,15 @@ let rec repl step state =
                                 "coins have been sent to " ^ ip) ) in
         repl step state
       | "view" ->
-        let () = failwith "unimplemnted" in
+        let () = input_until_safe (fun () ->
+            let () = print_endline "Type a blockchain ip
+                                    (include the decimal points)" in
+            let ip = read_line () |> clean_input in
+            if is_valid_ip ip = false then raise Bad_IP else
+              let chnstr = Bc.get_value (ip,"") in
+              let chain = BlockChain.blockchain_of_json
+                  (Yojson.Basic.from_string (chnstr))
+              in () (*TODO sabrina add print code here*)) in
         repl step state
       | _ ->
         let () = !bad_input_message() in
