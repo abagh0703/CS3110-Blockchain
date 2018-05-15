@@ -88,8 +88,8 @@ let new_user_orientation () =
   User.make_payment_file u (safe_name^".to");
   print_endline ("Welcome! Your configuration file has been saved to"^name);
   print_endline "Now, would you like to be a 'miner' or 'user' ?
-  Miners use your computer's power to earn OCOINs, while users can send OCOINs
-  and check their balance."
+Miners use your computer's power to earn OCOINs, while users can send OCOINs
+and check their balance."
 
 (* [mine_thread] is the thread miners run to mine *)
 let mine_thread = ref (Thread.self ())
@@ -144,8 +144,8 @@ let rec repl step state =
    | "signin" ->
      let () = print_endline (
          "Would you like to be a 'miner' (use your computer's resources to mine
-          for OCOINs),"^ " 'user' (send OCOINs and check your balance), or 'new'
-          (a new user" ^ " to all of this)?") in
+for OCOINs),"^ " 'user' (send OCOINs and check your balance), or 'new'
+(a new user" ^ " to all of this)?") in
      (match read_line () |> clean_input with
       | "miner" ->
          (*
@@ -199,7 +199,7 @@ let rec repl step state =
                                  (state.user, chain_mux, chain_ref, blk_mux,
                                   blk_ref, blkchn, blkchn_mux, ipr, ipm)) in
          print_endline "Congrats, you have just founded a brand new alt-coin.
-                        You will start with 42 oCoins.";
+You will start with 42 oCoins.";
           repl "mining" state
        | "join" ->
          let () = input_until_safe (
@@ -242,7 +242,7 @@ let rec repl step state =
         repl step state)
    | "use" ->
      let () = print_endline "You either type 'balance' to check your balance,
-     'send' to send OCOIN to others, or 'view' to view the blockchain" in
+'send' to send OCOIN to others, or 'view' to view the blockchain" in
      (match read_line () |> clean_input with
       | "balance" ->
         let () = input_until_safe (fun () ->
@@ -284,17 +284,16 @@ let rec repl step state =
                                 "coins have been sent to " ^ ip) ) in
         repl step state
       | "view" ->
-        input_until_safe (fun () ->
+        let () = input_until_safe (fun () ->
             let () = print_endline "Type a blockchain ip
-                                    (include the decimal points)" in
+(include the decimal points)" in
             let ip = read_line () |> clean_input in
             if is_valid_ip ip = false then raise Bad_IP else
-            let chnstr = Bc.get_value (ip,"") in
+              let chnstr = Bc.get_value (ip,"") in
             let chain = BlockChain.blockchain_of_json
                 (Yojson.Basic.from_string (chnstr)) in
-            let () = Crypto.BlockChain.blockchain_printify chain in
-            repl step state)
-
+            Crypto.BlockChain.blockchain_printify chain) in
+            repl step state
       | _ ->
         let () = !bad_input_message() in
         repl step state)
