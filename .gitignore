@@ -13,8 +13,6 @@ log.txt
 gitlog.txt
 floop.to
 floop.key
-*.to
-*.key
 .Makefile.*
 
 # ocamlbuild working directory
