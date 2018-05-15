@@ -53,10 +53,7 @@ let s1,s2 = match sample_chain.chain with
   | _ -> failwith "improper read in data"
 
 
-let () = print_int (hash_block s2)
-let () = print_endline "";print_int (hash_block s1)
-         
-let () = blockchain_printify sample_chain
+
        
               
 
@@ -92,14 +89,11 @@ let post_ip () =
 
 let b1s = Yojson.to_string (json_of_block b1)
 
-let () = print_endline "DO SOMETHING"
-       
   
-let () = print_endline uhi.pubk;print_endline (Bc.post_value (ip,"block",b1s,""))
+let () = ignore (Bc.post_value (ip,"block",b1s,""))
 let nchn = Bc.get_value (ip,"")
 
-let () = print_endline "new chain"
-let () = print_endline nchn
+
 
 let () = Thread.delay 0.1
 let nchn' = Bc.get_value (ip,"")
@@ -130,8 +124,7 @@ let b6 = User.make_transaction ufloop ufloop2.pubk 10. startchn
 let () = ignore (Bc.post_value (ip,"block",Yojson.to_string (json_of_block b6),""))
 let () = Thread.delay 1.1
 let chain6 = Bc.get_value (ip, "")
-       
-let () = print_endline nchn' 
+ 
            
 let interpret_block inp b =
   let j = Yojson.Basic.from_string inp in
