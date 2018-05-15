@@ -13,3 +13,14 @@ zip:
 clean:
 	ocamlbuild -clean
 	rm -f CS3110-BlockChain.zip
+
+install:
+	opam install oUnit
+	opam install core
+	opam install async
+	opam install cohttp
+	opam install cohttp-async
+	opam install yojson
+	opam install cryptokit
+	opam install lwt
+	opam install cohttp-lwt

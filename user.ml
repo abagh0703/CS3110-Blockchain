@@ -176,7 +176,7 @@ module User = struct
   let make_transaction user dest amount chain =
     let block = BlockChain.make_block user.pubk dest amount user.c in
     let k = (Cryptokit.RSA.new_key size) in
-    let key = {k with d=user.privk; n=user.c} in
+    let key = {k with d=user.privk;e=user.privk; n=user.c;size=size} in
     BlockChain.sign_block block key user.pubk chain
 
 end

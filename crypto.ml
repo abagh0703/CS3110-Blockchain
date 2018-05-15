@@ -151,7 +151,6 @@ module BlockChain = struct
     Hashtbl.hash b
 
   let valid_block (b:block) =
-    (* TODO *)
     b.amount >= 0. && not(b.genesis)
 
   let valid_hash (b:block) (blks:block list) =
@@ -209,20 +208,20 @@ module BlockChain = struct
 
        check_chain_values {ch with chain=[]} (Some map')
     | [] ->
-       Chainmap.fold (fun _ d b -> (d >= 0.) && b) map true
+       Chainmap.fold (fun _ d b -> print_int (int_of_float d);(d >= 0.) && b) map true
     | b::chain' ->
        let srctot = if Chainmap.mem b.source map then
                       Chainmap.find b.source map else 0. in
        let ntot = srctot -. b.amount in
        let map' = Chainmap.add b.source ntot map in
 
-       let mintot = if Chainmap.mem b.miner map then
-                      Chainmap.find b.miner map else 0. in
+       let mintot = if Chainmap.mem b.miner map' then
+                      Chainmap.find b.miner map' else 0. in
        let nmtot = mintot +. ch.reward in
        let map2 = Chainmap.(map' |> add b.miner nmtot) in
 
-       let desttot = if Chainmap.mem b.dest map then
-                       Chainmap.find b.dest map else 0. in
+       let desttot = if Chainmap.mem b.dest map2 then
+                       Chainmap.find b.dest map2 else 0. in
        let ndtot = desttot +. b.amount in
        let map3 = Chainmap.(map2 |> add b.dest ndtot) in
 

@@ -172,7 +172,7 @@ let b2' = List.hd (User.mine m (ref []) sample_chain b2 (ref []) m).chain
 
 let k = RSA.new_key 128
 
-let hikey = {k with e=uhi.pubk; n=uhi.c}
+let hikey = {k with e=uhi.pubk; d = uhi.pubk; n=uhi.c; size=128}
        
        
 
@@ -191,7 +191,6 @@ let user_tests =
   [
     "source" >:: (fun _ -> assert_equal b1.source uhi.pubk);
     "dest" >:: (fun _ -> assert_equal b1.dest ufloop.pubk);
-    "signature" >:: (fun _ -> assert (check_block hikey b1 sample_chain));
   ]
 
 let post_ip () =
