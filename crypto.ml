@@ -151,11 +151,7 @@ module BlockChain = struct
     Hashtbl.hash b
 
   let valid_block (b:block) =
-<<<<<<< HEAD
-    b.amount >= 0.
-=======
     b.amount >= 0. && not(b.genesis)
->>>>>>> 3a51789a8749df66b87c4457a3fafd5996abb948
 
   let valid_hash (b:block) (blks:block list) =
     match blks with
@@ -164,7 +160,7 @@ module BlockChain = struct
     | [] ->
       b.prev_hash = 0
 
-  
+
 
 
   let rec tail_complexity ch s =
@@ -286,11 +282,8 @@ module BlockChain = struct
     let length_msg = String.length blk.msg in
     let length_decryp = String.length decryption in
     let recover = String.sub decryption (length_decryp - 1 -length_msg) length_msg in
-<<<<<<< HEAD
-=======
     print_endline decryption;
     (* decrypt the message *)
->>>>>>> 3a51789a8749df66b87c4457a3fafd5996abb948
     if recover = blk.msg
     then true
     else false
@@ -314,15 +307,10 @@ module BlockChain = struct
 
   let get_source blk = blk.source
 
-<<<<<<< HEAD
-=======
   let set_prev_hash b blckchn =
     match blckchn.chain with
     | b'::_ ->
        {b with prev_hash = hash_block b'}
     | [] -> b
-                     
->>>>>>> 3a51789a8749df66b87c4457a3fafd5996abb948
-
 
 end

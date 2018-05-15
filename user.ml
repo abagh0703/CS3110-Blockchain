@@ -15,8 +15,6 @@ module User = struct
 
   let empty = {pubk = ""; privk = ""; c = ""}
 
-
-  (*Aram do not call this function, you got that? *)
   let rec mine (mine_mux:Mutex.t) (chain_queue:BlockChain.blockchain list ref) chain block ipsr ipm =
     if Mutex.try_lock mine_mux then
       if !chain_queue <> [] then
@@ -66,6 +64,7 @@ module User = struct
   let rec run_miner ((u:user), mine_mux, (chain_queue:BlockChain.blockchain list ref), request_mux, (request_queue:BlockChain.block list ref), (blockchain:BlockChain.blockchain ref), (chain_mux:Mutex.t), ipsr, ipm) =
     Thread.delay 0.01;
     if !should_die then
+      let () = should_die := false in
       let () = Thread.exit () in
       run_miner (u, mine_mux, chain_queue, request_mux, request_queue, blockchain, chain_mux, ipsr, ipm)
     else

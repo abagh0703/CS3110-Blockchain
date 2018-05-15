@@ -1,9 +1,10 @@
 module BlockChain :
   sig
 
+    (* [hash] is the type for security hashes *)
     type hash = int
 
-
+    (* [block] is the type for the blocks on the blockchain *)
     type block = {
       prev_hash:hash;
       time_stamp:int;
@@ -19,6 +20,7 @@ module BlockChain :
       msg:string;
     }
 
+    (* [blockchain] is the type for the blockchain. *)
   type blockchain = {
     chain:(block list);
     reward:float;
@@ -112,12 +114,11 @@ module BlockChain :
     (*[get_amount] returns the value of the block's amount.*)
     val get_amount : block -> float
 
-(*[get_source] returns the value of the block's source.*)
+    (* [get_source] returns the value of the block's source.*)
     val get_source : block -> string
 
-<<<<<<< HEAD
-=======
+(* [set_prev_hash block chain] sets the hash of [block] on [blockchain] to
+ * hash_block of [block]. *)
     val set_prev_hash : block -> blockchain -> block
 
->>>>>>> 3a51789a8749df66b87c4457a3fafd5996abb948
   end
