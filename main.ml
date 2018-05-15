@@ -284,7 +284,7 @@ let rec repl step state =
                                 "coins have been sent to " ^ ip) ) in
         repl step state
       | "view" ->
-        let () = input_until_safe (fun () ->
+        input_until_safe (fun () ->
             let () = print_endline "Type a blockchain ip
                                     (include the decimal points)" in
             let ip = read_line () |> clean_input in
