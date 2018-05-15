@@ -70,7 +70,6 @@ module User = struct
     else
       let lck = Mutex.try_lock mine_mux in
       if lck && !chain_queue <> [] then
-        let ()  = print_endline "unlocked" in
         let lst  = !chain_queue in
         match lst with
         |[] -> failwith "empty list"
