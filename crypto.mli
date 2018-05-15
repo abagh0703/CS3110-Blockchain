@@ -21,11 +21,11 @@ module BlockChain :
     }
 
     (* [blockchain] is the type for the blockchain. *)
-  type blockchain = {
-    chain:(block list);
-    reward:float;
-    bits:int;
-    complexity:int;
+    type blockchain = {
+      chain:(block list);
+      reward:float;
+      bits:int;
+      complexity:int;
     }
 
    (*Initializes an empty blockchain*)
@@ -80,7 +80,6 @@ module BlockChain :
      *)
     val measure_complexity : blockchain -> int
 
-
     (* If adding of the block is successful, returns the new blockchain and
      * true, otherwise returns the chain unmodified and false
      *)
@@ -107,7 +106,8 @@ module BlockChain :
    (*[sign_block] let the sender with private key [privk] sign the block [blk]*)
     val sign_block : block -> Cryptokit.RSA.key -> string -> blockchain -> block
 
-    (*Returns  *)
+   (*[check block] let the public check if the person who signed the block
+    * is a legitimate user*)
     val check_block : Cryptokit.RSA.key -> block -> 'a -> bool
 
     val make_block : string -> string -> float -> string -> block
@@ -117,8 +117,8 @@ module BlockChain :
     (* [get_source] returns the value of the block's source.*)
     val get_source : block -> string
 
-(* [set_prev_hash block chain] sets the hash of [block] on [blockchain] to
- * hash_block of [block]. *)
+    (* [set_prev_hash block chain] sets the hash of [block] on [blockchain] to
+     * hash_block of [block]. *)
     val set_prev_hash : block -> blockchain -> block
 
   end
